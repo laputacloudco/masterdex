@@ -3,100 +3,78 @@ import type { PokemonCard } from './types';
 
 export async function exportChecklistToPDF(
   cards: PokemonCard[],
-  setName: string,
-  const lineHeight = 7;
+  setName: string
 ) {
   const pdf = new jsPDF();
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
   const margin = 15;
-  pdf.setFont('helvetic
+  const lineHeight = 7;
   let y = margin;
 
   pdf.setFont('helvetica', 'bold');
-  for (const card of c
+  pdf.setFontSize(16);
   pdf.text('Pokemon Master Set Checklist', margin, y);
+  y += 10;
+
+  pdf.setFontSize(12);
+  pdf.text(setName, margin, y);
+  y += 10;
+
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(10);
+  pdf.text(`Total Cards: ${cards.length}`, margin, y);
+  y += 10;
+
+  pdf.setFontSize(9);
+  for (const card of cards) {
+    if (y > pageHeight - margin) {
+      pdf.addPage();
+      y = margin;
     }
 
-    pdf.setFont('helve
-  pdf.text(setName, margin, y);
+    const variantText = card.variant !== 'normal' ? ` [${card.variant}]` : '';
+    const detailText = `${card.name}${variantText} - ${card.setCode} ${card.setNumber}`;
     
-
-    const variantText = card.variant 
-    const detailText =
     pdf.setFontSize(8);
+    pdf.text('☐', margin, y);
+    pdf.text(detailText, margin + 8, y);
     
-      cons
+    y += lineHeight;
+  }
 
-    
-  
-
+  pdf.save(`${setName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_checklist.pdf`);
 }
-export async functio
+
+export async function exportPlaceholdersToPDF(
+  cards: PokemonCard[],
   setName: string
 ) {
-
-    throw new Error('No unchecked cards to generate
-    
-  const cardWidth = 63;
-    
-  const cardsPerPage = cardsPerRow * card
-  const marginY = 10;
-    
-    const pageIndex = Math.floor(i / cardsPerPage);
-    const row = Math.floor(cardIndexOn
-    
-      pdf.addPage();
-    
-    const y = marginY + (row * cardHeight);
-    pdf.setDrawColor(200, 200, 200);
-    pdf.roundedRect(x, 
-    pdf.setFontSize(8);
-    
-    
-    pdf.setFontSize(7);
-    
-      pdf.text(`${card.variant}`, x + 3, y + 17);
-    
-    
-    pdf.setTextColor(0,
-
-}
-
-  if (!printContent) return;
-}
-
-    <!DOCTYPE html>
-      <head>
-        <style>
-            body { margi
-   
-          body { font-family: Arial, sans-serif; }
+  const uncheckedCards = cards;
   
-          .card-item { 
-            align-items: center; 
-   
+  if (uncheckedCards.length === 0) {
+    throw new Error('No cards to generate placeholders for');
+  }
 
-            width: 16px; 
+  const pdf = new jsPDF();
   const cardWidth = 63;
-            flex-shrink:
-          .checkbox.chec
-            position: re
-          .checkbox.checked::after {
-            color: white;
+  const cardHeight = 88;
+  const marginX = 10;
   const marginY = 10;
-  
-          .card-name { 
-            font-weight: bold;
+  const cardsPerRow = 3;
+  const cardsPerCol = 3;
+  const cardsPerPage = cardsPerRow * cardsPerCol;
+
+  uncheckedCards.forEach((card, i) => {
     const pageIndex = Math.floor(i / cardsPerPage);
-            font-size: 10px; 
-            margin-left: 28px;
-          .card-price {
-    
-          }
+    const cardIndexOnPage = i % cardsPerPage;
+    const row = Math.floor(cardIndexOnPage / cardsPerRow);
+    const col = cardIndexOnPage % cardsPerRow;
+
+    if (i > 0 && cardIndexOnPage === 0) {
       pdf.addPage();
-     
-    
+    }
+
     const x = marginX + (col * cardWidth);
     const y = marginY + (row * cardHeight);
     
@@ -121,7 +99,7 @@ export async functio
     pdf.setTextColor(150, 150, 150);
     pdf.text('PLACEHOLDER', x + cardWidth / 2, y + cardHeight / 2, { align: 'center' });
     pdf.setTextColor(0, 0, 0);
-  }
+  });
 
   pdf.save(`${setName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_placeholders.pdf`);
 }
@@ -199,9 +177,7 @@ export function printChecklist() {
 
   printWindow.document.close();
 
-  
   setTimeout(() => {
     printWindow.print();
-
   }, 250);
-
+}

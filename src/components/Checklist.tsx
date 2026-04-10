@@ -10,7 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Printer, CheckCircle, CurrencyDollar, FilePdf, CaretDown, Cards, UserCircle } from '@phosphor-icons/react';
 import { formatCardName, getVariantLabel } from '@/lib/cardUtils';
 import { CardPreview } from './CardPreview';
-import { exportChecklistToPDF, exportProxiesPDF, printChecklist } from '@/lib/exportUtils';
+import { exportChecklistToPDF, exportPlaceholdersToPDF, printChecklist } from '@/lib/exportUtils';
 import { toast } from 'sonner';
 
 interface ChecklistProps {
@@ -34,7 +34,7 @@ export function Checklist({ cards, setName }: ChecklistProps) {
 
   const handleExportPDF = async () => {
     try {
-      await exportChecklistToPDF(cards, setName, checkedCards || []);
+      await exportChecklistToPDF(cards, setName);
       toast.success('Checklist exported to PDF!');
     } catch (error) {
       console.error('Failed to export PDF:', error);
@@ -44,11 +44,11 @@ export function Checklist({ cards, setName }: ChecklistProps) {
 
   const handleExportProxies = async () => {
     try {
-      await exportProxiesPDF(cards, setName, checkedCards || []);
-      toast.success('Proxies exported to PDF!');
+      await exportPlaceholdersToPDF(cards, setName);
+      toast.success('Placeholders exported to PDF!');
     } catch (error) {
-      console.error('Failed to export proxies:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to export proxies');
+      console.error('Failed to export placeholders:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to export placeholders');
     }
   };
 
