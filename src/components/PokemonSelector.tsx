@@ -9,7 +9,7 @@ import { getEvolutionChain } from '@/lib/pokemonData';
 
 interface PokemonSelectorProps {
   selectedPokemon: string[];
-  onSelectPokemon: (pokemon: string) => void;
+  onSelectPokemon: (pokemon: string | string[]) => void;
   onRemovePokemon: (pokemon: string) => void;
   showEvolutionChain?: boolean;
 }
@@ -51,11 +51,10 @@ export function PokemonSelector({
   const handleSelect = (pokemon: string) => {
     if (showEvolutionChain) {
       const chain = getEvolutionChain(pokemon);
-      chain.forEach(p => {
-        if (!selectedPokemon.includes(p)) {
-          onSelectPokemon(p);
-        }
-      });
+      const newPokemon = chain.filter(p => !selectedPokemon.includes(p));
+      if (newPokemon.length > 0) {
+        onSelectPokemon(newPokemon);
+      }
     } else {
       onSelectPokemon(pokemon);
     }

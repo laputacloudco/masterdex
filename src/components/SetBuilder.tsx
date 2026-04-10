@@ -112,8 +112,12 @@ export function SetBuilder({ onGenerate, isGenerating }: SetBuilderProps) {
         <PokemonSelector
           selectedPokemon={selectedPokemon}
           onSelectPokemon={(pokemon) => {
-            if (!selectedPokemon.includes(pokemon)) {
-              setSelectedPokemon([...selectedPokemon, pokemon]);
+            if (Array.isArray(pokemon)) {
+              setSelectedPokemon([...selectedPokemon, ...pokemon]);
+            } else {
+              if (!selectedPokemon.includes(pokemon)) {
+                setSelectedPokemon([...selectedPokemon, pokemon]);
+              }
             }
           }}
           onRemovePokemon={(pokemon) => {
