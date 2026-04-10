@@ -21,6 +21,7 @@ const DEFAULT_VARIANT_FILTERS: VariantFilters = {
   promo: true,
   collab: true,
   tournament: true,
+  cameo: true,
 };
 
 function App() {
@@ -89,6 +90,8 @@ function App() {
               return currentVariantFilters.collab;
             case 'tournament':
               return currentVariantFilters.tournament;
+            case 'cameo':
+              return currentVariantFilters.cameo;
             default:
               return true;
           }

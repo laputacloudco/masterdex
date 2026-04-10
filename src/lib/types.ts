@@ -1,4 +1,4 @@
-export type CardVariant = 'normal' | 'reverse-holo' | 'holo' | 'full-art' | 'secret-rare' | 'rainbow-rare' | 'gold' | 'promo' | 'collab' | 'tournament';
+export type CardVariant = 'normal' | 'reverse-holo' | 'holo' | 'full-art' | 'secret-rare' | 'rainbow-rare' | 'gold' | 'promo' | 'collab' | 'tournament' | 'cameo';
 
 export type SortOrder = 'set-order' | 'chronological' | 'grouped-by-set' | 'evolution-chain';
 
@@ -15,6 +15,7 @@ export interface VariantFilters {
   promo: boolean;
   collab: boolean;
   tournament: boolean;
+  cameo: boolean;
 }
 
 export interface PokemonCard {

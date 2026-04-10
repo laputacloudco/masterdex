@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CircleNotch, Sparkle, Star, Lightning, Trophy, Gift, Handshake, Medal } from '@phosphor-icons/react';
+import { CircleNotch, Sparkle, Star, Lightning, Trophy, Gift, Handshake, Medal, UserCircle } from '@phosphor-icons/react';
 import { PokemonSelector } from './PokemonSelector';
 import { SetSelector } from './SetSelector';
 
@@ -36,6 +36,7 @@ const DEFAULT_VARIANT_FILTERS: VariantFilters = {
   promo: true,
   collab: true,
   tournament: true,
+  cameo: true,
 };
 
 export function SetBuilder({
@@ -77,6 +78,7 @@ export function SetBuilder({
       promo: false,
       collab: false,
       tournament: false,
+      cameo: false,
     });
   };
 
@@ -92,6 +94,7 @@ export function SetBuilder({
       promo: true,
       collab: true,
       tournament: true,
+      cameo: false,
     });
   };
 
@@ -107,6 +110,7 @@ export function SetBuilder({
       promo: true,
       collab: true,
       tournament: true,
+      cameo: true,
     });
   };
 
@@ -122,6 +126,7 @@ export function SetBuilder({
       promo: false,
       collab: false,
       tournament: false,
+      cameo: false,
     });
   };
 
@@ -407,6 +412,26 @@ export function SetBuilder({
                     </Label>
                     <p className="text-xs text-muted-foreground mt-1">
                       Official tournament prize cards
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-3 p-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors">
+                  <Checkbox
+                    id="variant-cameo"
+                    checked={currentVariantFilters.cameo}
+                    onCheckedChange={() => handleVariantToggle('cameo')}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor="variant-cameo" className="cursor-pointer font-medium flex items-center gap-2">
+                      <div className="w-5 h-5 rounded bg-indigo-500 flex items-center justify-center">
+                        <UserCircle size={12} weight="fill" className="text-white" />
+                      </div>
+                      Cameo Cards
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Pokemon appearing in other Pokemon's cards
                     </p>
                   </div>
                 </div>

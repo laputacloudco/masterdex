@@ -53,6 +53,7 @@ export function SavedSetlists({ currentConfig, onLoad }: SavedSetlistsProps) {
         promo: true,
         collab: true,
         tournament: true,
+        cameo: true,
       },
       selectedSets: currentConfig.selectedSets || [],
       selectedPokemon: currentConfig.selectedPokemon || [],
