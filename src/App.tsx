@@ -131,7 +131,7 @@ function App() {
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <header className="mb-8 text-center">
           <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-            Pokemon Master Set Planner
+            MasterDex
           </h1>
           <p className="text-lg text-muted-foreground">
             Build comprehensive checklists for your Pokemon card collection

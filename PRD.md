@@ -1,6 +1,6 @@
 # Planning Guide
 
-A comprehensive Pokemon Trading Card Master Set planner that helps collectors organize and track complete sets, including official set releases, Pokemon-specific collections, and evolution chains with all card variants.
+**MasterDex** - A comprehensive Pokemon Trading Card Master Set planner that helps collectors organize and track complete sets, including official set releases, Pokemon-specific collections, and evolution chains with all card variants.
 
 **Experience Qualities**:
 1. **Organized** - Clear categorization and flexible sorting options make it easy to plan complex collections across hundreds of card variants
