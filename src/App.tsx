@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SetBuilder } from '@/components/SetBuilder';
 import { Checklist } from '@/components/Checklist';
 import { SavedSetlists } from '@/components/SavedSetlists';
+import { VariantStatistics } from '@/components/VariantStatistics';
 import { fetchCardsForSet, fetchCardsForPokemon } from '@/lib/pokemonTcgApi';
 import { sortCards } from '@/lib/cardUtils';
 import { toast } from 'sonner';
@@ -180,7 +181,8 @@ function App() {
 
           <TabsContent value="checklist" className="mt-8">
             {canViewChecklist && (
-              <div className="max-w-4xl mx-auto">
+              <div className="max-w-4xl mx-auto space-y-6">
+                <VariantStatistics cards={cards} />
                 <Checklist cards={cards} setName={checklistName} />
               </div>
             )}

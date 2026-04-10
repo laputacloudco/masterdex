@@ -5,7 +5,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { CircleNotch } from '@phosphor-icons/react';
+import { Button } from '@/components/ui/button';
+import { CircleNotch, Sparkle, Star, Lightning, Trophy, Gift, Handshake, Medal } from '@phosphor-icons/react';
 import { PokemonSelector } from './PokemonSelector';
 import { SetSelector } from './SetSelector';
 
@@ -64,6 +65,66 @@ export function SetBuilder({
     });
   };
 
+  const applyCommonPreset = () => {
+    setVariantFilters({
+      normal: true,
+      holo: true,
+      reverseHolo: true,
+      fullArt: false,
+      secretRare: false,
+      rainbowRare: false,
+      gold: false,
+      promo: false,
+      collab: false,
+      tournament: false,
+    });
+  };
+
+  const applyRarePreset = () => {
+    setVariantFilters({
+      normal: false,
+      holo: false,
+      reverseHolo: false,
+      fullArt: true,
+      secretRare: true,
+      rainbowRare: true,
+      gold: true,
+      promo: true,
+      collab: true,
+      tournament: true,
+    });
+  };
+
+  const selectAll = () => {
+    setVariantFilters({
+      normal: true,
+      holo: true,
+      reverseHolo: true,
+      fullArt: true,
+      secretRare: true,
+      rainbowRare: true,
+      gold: true,
+      promo: true,
+      collab: true,
+      tournament: true,
+    });
+  };
+
+  const clearAll = () => {
+    setVariantFilters({
+      normal: false,
+      holo: false,
+      reverseHolo: false,
+      fullArt: false,
+      secretRare: false,
+      rainbowRare: false,
+      gold: false,
+      promo: false,
+      collab: false,
+      tournament: false,
+    });
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <Card>
@@ -102,6 +163,41 @@ export function SetBuilder({
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={applyCommonPreset}
+                className="flex items-center gap-2"
+              >
+                <span>Common Only</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={applyRarePreset}
+                className="flex items-center gap-2"
+              >
+                <Star size={16} weight="fill" />
+                <span>Rare Only</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={selectAll}
+                className="flex items-center gap-2"
+              >
+                <span>Select All</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearAll}
+                className="flex items-center gap-2"
+              >
+                <span>Clear All</span>
+              </Button>
+            </div>
             <div>
               <h4 className="text-sm font-medium mb-3 text-foreground">Standard Variants</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -113,7 +209,10 @@ export function SetBuilder({
                     className="mt-1"
                   />
                   <div className="flex-1">
-                    <Label htmlFor="variant-normal" className="cursor-pointer font-medium">
+                    <Label htmlFor="variant-normal" className="cursor-pointer font-medium flex items-center gap-2">
+                      <div className="w-5 h-5 rounded bg-slate-500 flex items-center justify-center">
+                        <span className="text-white text-[10px] font-bold">N</span>
+                      </div>
                       Normal Cards
                     </Label>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -130,7 +229,10 @@ export function SetBuilder({
                     className="mt-1"
                   />
                   <div className="flex-1">
-                    <Label htmlFor="variant-holo" className="cursor-pointer font-medium">
+                    <Label htmlFor="variant-holo" className="cursor-pointer font-medium flex items-center gap-2">
+                      <div className="w-5 h-5 rounded bg-blue-500 flex items-center justify-center">
+                        <Sparkle size={12} weight="fill" className="text-white" />
+                      </div>
                       Holo & Special Finishes
                     </Label>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -147,7 +249,10 @@ export function SetBuilder({
                     className="mt-1"
                   />
                   <div className="flex-1">
-                    <Label htmlFor="variant-reverse-holo" className="cursor-pointer font-medium">
+                    <Label htmlFor="variant-reverse-holo" className="cursor-pointer font-medium flex items-center gap-2">
+                      <div className="w-5 h-5 rounded bg-cyan-500 flex items-center justify-center">
+                        <Sparkle size={12} weight="fill" className="text-white" />
+                      </div>
                       Reverse Holo
                     </Label>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -169,7 +274,10 @@ export function SetBuilder({
                     className="mt-1"
                   />
                   <div className="flex-1">
-                    <Label htmlFor="variant-full-art" className="cursor-pointer font-medium">
+                    <Label htmlFor="variant-full-art" className="cursor-pointer font-medium flex items-center gap-2">
+                      <div className="w-5 h-5 rounded bg-purple-500 flex items-center justify-center">
+                        <Star size={12} weight="fill" className="text-white" />
+                      </div>
                       Full Art
                     </Label>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -186,7 +294,10 @@ export function SetBuilder({
                     className="mt-1"
                   />
                   <div className="flex-1">
-                    <Label htmlFor="variant-secret-rare" className="cursor-pointer font-medium">
+                    <Label htmlFor="variant-secret-rare" className="cursor-pointer font-medium flex items-center gap-2">
+                      <div className="w-5 h-5 rounded bg-pink-500 flex items-center justify-center">
+                        <Star size={12} weight="fill" className="text-white" />
+                      </div>
                       Secret Rare
                     </Label>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -203,7 +314,10 @@ export function SetBuilder({
                     className="mt-1"
                   />
                   <div className="flex-1">
-                    <Label htmlFor="variant-rainbow-rare" className="cursor-pointer font-medium">
+                    <Label htmlFor="variant-rainbow-rare" className="cursor-pointer font-medium flex items-center gap-2">
+                      <div className="w-5 h-5 rounded bg-gradient-to-r from-red-500 via-yellow-500 to-purple-500 flex items-center justify-center">
+                        <Lightning size={12} weight="fill" className="text-white" />
+                      </div>
                       Rainbow Rare
                     </Label>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -220,7 +334,10 @@ export function SetBuilder({
                     className="mt-1"
                   />
                   <div className="flex-1">
-                    <Label htmlFor="variant-gold" className="cursor-pointer font-medium">
+                    <Label htmlFor="variant-gold" className="cursor-pointer font-medium flex items-center gap-2">
+                      <div className="w-5 h-5 rounded bg-yellow-500 flex items-center justify-center">
+                        <Lightning size={12} weight="fill" className="text-white" />
+                      </div>
                       Gold Cards
                     </Label>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -242,7 +359,10 @@ export function SetBuilder({
                     className="mt-1"
                   />
                   <div className="flex-1">
-                    <Label htmlFor="variant-promo" className="cursor-pointer font-medium">
+                    <Label htmlFor="variant-promo" className="cursor-pointer font-medium flex items-center gap-2">
+                      <div className="w-5 h-5 rounded bg-orange-500 flex items-center justify-center">
+                        <Gift size={12} weight="fill" className="text-white" />
+                      </div>
                       Promo Cards
                     </Label>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -259,7 +379,10 @@ export function SetBuilder({
                     className="mt-1"
                   />
                   <div className="flex-1">
-                    <Label htmlFor="variant-collab" className="cursor-pointer font-medium">
+                    <Label htmlFor="variant-collab" className="cursor-pointer font-medium flex items-center gap-2">
+                      <div className="w-5 h-5 rounded bg-green-500 flex items-center justify-center">
+                        <Handshake size={12} weight="fill" className="text-white" />
+                      </div>
                       Collaborations
                     </Label>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -276,7 +399,10 @@ export function SetBuilder({
                     className="mt-1"
                   />
                   <div className="flex-1">
-                    <Label htmlFor="variant-tournament" className="cursor-pointer font-medium">
+                    <Label htmlFor="variant-tournament" className="cursor-pointer font-medium flex items-center gap-2">
+                      <div className="w-5 h-5 rounded bg-amber-600 flex items-center justify-center">
+                        <Trophy size={12} weight="fill" className="text-white" />
+                      </div>
                       Tournament Prizes
                     </Label>
                     <p className="text-xs text-muted-foreground mt-1">
