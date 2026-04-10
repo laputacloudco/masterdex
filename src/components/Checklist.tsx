@@ -155,76 +155,77 @@ export function Checklist({ cards, setName }: ChecklistProps) {
             {cards.map((card) => {
               const checked = isChecked(card.id);
               return (
-                <CardPreview key={card.id} card={card}>
-                  <div
-                    className={`flex items-start gap-3 p-3 rounded-lg border transition-all ${
-                      checked 
-                        ? 'bg-muted/50 border-accent/50' 
-                        : 'hover:bg-accent/5 hover:border-accent/30'
-                    }`}
-                  >
-                    <Checkbox
-                      id={card.id}
-                      checked={checked}
-                      onCheckedChange={() => toggleCheck(card.id)}
-                      className="mt-0.5"
-                    />
-                    
-                    {card.imageUrl && (
+                <div
+                  key={card.id}
+                  className={`flex items-start gap-3 p-3 rounded-lg border transition-all ${
+                    checked 
+                      ? 'bg-muted/50 border-accent/50' 
+                      : 'hover:bg-accent/5 hover:border-accent/30'
+                  }`}
+                >
+                  <Checkbox
+                    id={card.id}
+                    checked={checked}
+                    onCheckedChange={() => toggleCheck(card.id)}
+                    className="mt-0.5"
+                  />
+                  
+                  {card.imageUrl && (
+                    <CardPreview card={card}>
                       <img 
                         src={card.imageUrl} 
                         alt={card.name}
-                        className="w-16 h-22 object-cover rounded border"
+                        className="w-16 h-22 object-cover rounded border cursor-pointer"
                       />
-                    )}
+                    </CardPreview>
+                  )}
+                  
+                  <div className="flex-1">
+                    <label
+                      htmlFor={card.id}
+                      className={`text-sm font-medium cursor-pointer block ${
+                        checked ? 'line-through text-muted-foreground' : ''
+                      }`}
+                    >
+                      {formatCardName(card)}
+                    </label>
                     
-                    <div className="flex-1">
-                      <label
-                        htmlFor={card.id}
-                        className={`text-sm font-medium cursor-pointer block ${
-                          checked ? 'line-through text-muted-foreground' : ''
-                        }`}
-                      >
-                        {formatCardName(card)}
-                      </label>
+                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                      <Badge variant="outline" className="text-xs">
+                        {card.setCode}
+                      </Badge>
                       
-                      <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                        <Badge variant="outline" className="text-xs">
-                          {card.setCode}
+                      {card.variant !== 'normal' && (
+                        <Badge 
+                          variant="secondary" 
+                          className={`text-xs ${card.isHolo ? 'holo-shimmer' : ''}`}
+                        >
+                          {getVariantLabel(card.variant)}
                         </Badge>
-                        
-                        {card.variant !== 'normal' && (
-                          <Badge 
-                            variant="secondary" 
-                            className={`text-xs ${card.isHolo ? 'holo-shimmer' : ''}`}
-                          >
-                            {getVariantLabel(card.variant)}
-                          </Badge>
-                        )}
-                        
-                        {card.isHolo && card.variant === 'normal' && (
-                          <Badge variant="secondary" className="text-xs holo-shimmer">
-                            Holo
-                          </Badge>
-                        )}
-                        
-                        <span className="text-xs text-muted-foreground">
-                          {card.rarity}
-                        </span>
-                        
-                        {card.marketPrice && (
-                          <Badge variant="outline" className="text-xs font-mono">
-                            ${card.marketPrice.toFixed(2)}
-                          </Badge>
-                        )}
-                      </div>
+                      )}
+                      
+                      {card.isHolo && card.variant === 'normal' && (
+                        <Badge variant="secondary" className="text-xs holo-shimmer">
+                          Holo
+                        </Badge>
+                      )}
+                      
+                      <span className="text-xs text-muted-foreground">
+                        {card.rarity}
+                      </span>
+                      
+                      {card.marketPrice && (
+                        <Badge variant="outline" className="text-xs font-mono">
+                          ${card.marketPrice.toFixed(2)}
+                        </Badge>
+                      )}
                     </div>
-
-                    {checked && (
-                      <CheckCircle weight="fill" className="text-accent flex-shrink-0" size={20} />
-                    )}
                   </div>
-                </CardPreview>
+
+                  {checked && (
+                    <CheckCircle weight="fill" className="text-accent flex-shrink-0" size={20} />
+                  )}
+                </div>
               );
             })}
           </div>
