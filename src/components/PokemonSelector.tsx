@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MagnifyingGlass, X, Lightning } from '@phosphor-icons/react';
-import { POKEMON_SPECIES, getEvolutionChain } from '@/lib/pokemonData';
+import { searchPokemon } from '@/lib/pokemonTcgApi';
+import { getEvolutionChain } from '@/lib/pokemonData';
 
 interface PokemonSelectorProps {
   selectedPokemon: string[];
@@ -20,12 +21,32 @@ export function PokemonSelector({
   showEvolutionChain 
 }: PokemonSelectorProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState<string[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
-  const allPokemon = Object.values(POKEMON_SPECIES).map(s => s.name);
-  const filteredPokemon = allPokemon.filter(name => 
-    name.toLowerCase().includes(searchTerm.toLowerCase()) && 
-    !selectedPokemon.includes(name)
-  );
+  useEffect(() => {
+    const performSearch = async () => {
+      if (searchTerm.length < 2) {
+        setSearchResults([]);
+        return;
+      }
+
+      setIsSearching(true);
+      try {
+        const results = await searchPokemon(searchTerm);
+        const filtered = results.filter(name => !selectedPokemon.includes(name));
+        setSearchResults(filtered);
+      } catch (error) {
+        console.error('Search failed:', error);
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    const timeoutId = setTimeout(performSearch, 300);
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, selectedPokemon]);
 
   const handleSelect = (pokemon: string) => {
     if (showEvolutionChain) {
@@ -39,6 +60,7 @@ export function PokemonSelector({
       onSelectPokemon(pokemon);
     }
     setSearchTerm('');
+    setSearchResults([]);
   };
 
   return (
@@ -67,9 +89,9 @@ export function PokemonSelector({
           />
         </div>
 
-        {searchTerm && filteredPokemon.length > 0 && (
+        {searchTerm && searchResults.length > 0 && (
           <div className="border rounded-lg p-2 max-h-48 overflow-y-auto space-y-1">
-            {filteredPokemon.slice(0, 10).map(pokemon => (
+            {searchResults.slice(0, 10).map(pokemon => (
               <button
                 key={pokemon}
                 onClick={() => handleSelect(pokemon)}
@@ -84,6 +106,10 @@ export function PokemonSelector({
               </button>
             ))}
           </div>
+        )}
+
+        {isSearching && searchTerm.length >= 2 && (
+          <p className="text-sm text-muted-foreground">Searching...</p>
         )}
 
         {selectedPokemon.length > 0 && (

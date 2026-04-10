@@ -19,9 +19,10 @@ interface SetBuilderProps {
     selectedPokemon: string[];
     sortOrder: SortOrder;
   }) => void;
+  isGenerating?: boolean;
 }
 
-export function SetBuilder({ onGenerate }: SetBuilderProps) {
+export function SetBuilder({ onGenerate, isGenerating }: SetBuilderProps) {
   const [masterSetType, setMasterSetType] = useState<MasterSetType>('pokemon-collection');
   const [includeAllVariants, setIncludeAllVariants] = useState(true);
   const [sortOrder, setSortOrder] = useState<SortOrder>('chronological');
@@ -148,12 +149,12 @@ export function SetBuilder({ onGenerate }: SetBuilderProps) {
 
       <Button 
         onClick={handleGenerate} 
-        disabled={!canGenerate}
+        disabled={!canGenerate || isGenerating}
         size="lg"
         className="bg-accent text-accent-foreground hover:bg-accent/90"
       >
         <Sparkle className="mr-2" weight="fill" />
-        Generate Master Set Checklist
+        {isGenerating ? 'Generating...' : 'Generate Master Set Checklist'}
       </Button>
     </div>
   );

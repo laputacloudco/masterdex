@@ -89,6 +89,14 @@ export function Checklist({ cards, setName }: ChecklistProps) {
                     className="mt-0.5"
                   />
                   
+                  {card.imageUrl && (
+                    <img 
+                      src={card.imageUrl} 
+                      alt={card.name}
+                      className="w-16 h-22 object-cover rounded border"
+                    />
+                  )}
+                  
                   <div className="flex-1">
                     <label
                       htmlFor={card.id}
@@ -99,7 +107,7 @@ export function Checklist({ cards, setName }: ChecklistProps) {
                       {formatCardName(card)}
                     </label>
                     
-                    <div className="flex items-center gap-2 mt-1.5">
+                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                       <Badge variant="outline" className="text-xs">
                         {card.setCode}
                       </Badge>
