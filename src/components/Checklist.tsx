@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { Printer, CheckCircle, CurrencyDollar, FilePdf, CaretDown, Cards } from '@phosphor-icons/react';
+import { Printer, CheckCircle, CurrencyDollar, FilePdf, CaretDown, Cards, UserCircle } from '@phosphor-icons/react';
 import { formatCardName, getVariantLabel } from '@/lib/cardUtils';
 import { CardPreview } from './CardPreview';
 import { exportChecklistToPDF, exportProxiesPDF, printChecklist } from '@/lib/exportUtils';
@@ -195,7 +195,17 @@ export function Checklist({ cards, setName }: ChecklistProps) {
                         {card.setCode}
                       </Badge>
                       
-                      {card.variant !== 'normal' && (
+                      {card.variant === 'cameo' && (
+                        <Badge 
+                          variant="secondary" 
+                          className="text-xs bg-indigo-100 text-indigo-700 border-indigo-200"
+                        >
+                          <UserCircle size={12} weight="fill" className="mr-1" />
+                          Cameo
+                        </Badge>
+                      )}
+                      
+                      {card.variant !== 'normal' && card.variant !== 'cameo' && (
                         <Badge 
                           variant="secondary" 
                           className={`text-xs ${card.isHolo ? 'holo-shimmer' : ''}`}

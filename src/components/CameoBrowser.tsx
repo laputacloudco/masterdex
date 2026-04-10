@@ -1,21 +1,31 @@
 import { useState, useMemo } from 'react';
+import { useKV } from '@github/spark/hooks';
 import { CAMEO_DATABASE, getCameoStatistics, type CameoEntry } from '@/lib/cameoData';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { MagnifyingGlass, UserCircle, Cards, Info } from '@phosphor-icons/react';
+import { Button } from '@/components/ui/button';
+import { MagnifyingGlass, UserCircle, Cards, Info, Plus, Minus } from '@phosphor-icons/react';
+import { CameoContributor } from './CameoContributor';
 
 export function CameoBrowser() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [showContributor, setShowContributor] = useState(false);
+  const [userContributions, setUserContributions] = useKV<CameoEntry[]>('user-cameo-contributions', []);
+
+  const allCameos = useMemo(() => {
+    return [...CAMEO_DATABASE, ...(userContributions || [])];
+  }, [userContributions]);
+
   const stats = getCameoStatistics();
 
   const filteredCameos = useMemo(() => {
-    if (!searchQuery.trim()) return CAMEO_DATABASE;
+    if (!searchQuery.trim()) return allCameos;
 
     const query = searchQuery.toLowerCase();
-    return CAMEO_DATABASE.filter((entry) => {
+    return allCameos.filter((entry) => {
       return (
         entry.mainPokemon.toLowerCase().includes(query) ||
         entry.cameoPokemon.some((pokemon) => pokemon.toLowerCase().includes(query)) ||
@@ -23,25 +33,46 @@ export function CameoBrowser() {
         entry.setName.toLowerCase().includes(query)
       );
     });
-  }, [searchQuery]);
+  }, [searchQuery, allCameos]);
+
+  const handleContribute = (entry: CameoEntry) => {
+    setUserContributions((current) => {
+      return [...(current || []), entry];
+    });
+    setShowContributor(false);
+  };
+
+  const userContributionCount = userContributions?.length || 0;
 
   return (
     <div className="space-y-6">
       <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <UserCircle size={28} weight="fill" className="text-indigo-600" />
-            Cameo Card Database
-          </CardTitle>
-          <CardDescription>
-            Browse Pokemon cards where other Pokemon make cameo appearances in the artwork
-          </CardDescription>
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <UserCircle size={28} weight="fill" className="text-indigo-600" />
+                Cameo Card Database
+              </CardTitle>
+              <CardDescription className="mt-2">
+                Browse Pokemon cards where other Pokemon make cameo appearances in the artwork
+              </CardDescription>
+            </div>
+            <Button
+              variant={showContributor ? "secondary" : "default"}
+              onClick={() => setShowContributor(!showContributor)}
+              className="gap-2"
+            >
+              {showContributor ? <Minus /> : <Plus />}
+              {showContributor ? 'Hide Form' : 'Add Cameo'}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-white rounded-lg p-4 border border-indigo-100">
               <div className="text-2xl font-bold text-indigo-600">{stats.totalEntries}</div>
-              <div className="text-sm text-muted-foreground">Total Cameo Cards</div>
+              <div className="text-sm text-muted-foreground">Official Database</div>
             </div>
             <div className="bg-white rounded-lg p-4 border border-indigo-100">
               <div className="text-2xl font-bold text-purple-600">{stats.uniquePokemon}</div>
@@ -53,13 +84,17 @@ export function CameoBrowser() {
             </div>
             <div className="bg-white rounded-lg p-4 border border-indigo-100">
               <div className="text-2xl font-bold text-violet-600">
-                {stats.mostFeatured[0]?.pokemon || 'N/A'}
+                {userContributionCount}
               </div>
-              <div className="text-sm text-muted-foreground">Most Featured</div>
+              <div className="text-sm text-muted-foreground">Your Contributions</div>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      {showContributor && (
+        <CameoContributor onContribute={handleContribute} />
+      )}
 
       <Card>
         <CardHeader>
@@ -91,6 +126,11 @@ export function CameoBrowser() {
         <CardHeader>
           <CardTitle>
             Cameo Entries ({filteredCameos.length})
+            {userContributionCount > 0 && (
+              <Badge variant="secondary" className="ml-2">
+                {userContributionCount} user-contributed
+              </Badge>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -102,9 +142,18 @@ export function CameoBrowser() {
                   <p>No cameo cards found matching your search.</p>
                 </div>
               ) : (
-                filteredCameos.map((entry, index) => (
-                  <CameoCard key={`${entry.cardId}-${index}`} entry={entry} />
-                ))
+                filteredCameos.map((entry, index) => {
+                  const isUserContributed = userContributions?.some(
+                    (contrib) => contrib.cardId === entry.cardId && contrib.cardName === entry.cardName
+                  );
+                  return (
+                    <CameoCard 
+                      key={`${entry.cardId}-${index}`} 
+                      entry={entry} 
+                      isUserContributed={isUserContributed}
+                    />
+                  );
+                })
               )}
             </div>
           </ScrollArea>
@@ -138,14 +187,23 @@ export function CameoBrowser() {
   );
 }
 
-function CameoCard({ entry }: { entry: CameoEntry }) {
+function CameoCard({ entry, isUserContributed }: { entry: CameoEntry; isUserContributed?: boolean }) {
   return (
-    <div className="border rounded-lg p-4 bg-card hover:bg-accent/5 transition-colors">
+    <div className={`border rounded-lg p-4 bg-card hover:bg-accent/5 transition-colors ${
+      isUserContributed ? 'border-primary/40 bg-primary/5' : ''
+    }`}>
       <div className="flex flex-col md:flex-row md:items-start gap-3">
         <div className="flex-1 space-y-2">
           <div className="flex items-start justify-between gap-2">
             <div>
-              <h4 className="font-semibold text-lg">{entry.cardName}</h4>
+              <div className="flex items-center gap-2">
+                <h4 className="font-semibold text-lg">{entry.cardName}</h4>
+                {isUserContributed && (
+                  <Badge variant="default" className="text-xs">
+                    Your Contribution
+                  </Badge>
+                )}
+              </div>
               <p className="text-sm text-muted-foreground">
                 {entry.setName} • {entry.cardId}
               </p>
