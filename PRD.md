@@ -41,11 +41,11 @@ This app requires managing large datasets of Pokemon cards with multiple attribu
 - **Success criteria**: Cards reorder instantly; evolution chains group correctly
 
 ### Binder-Ready Checklist Output
-- **Functionality**: Generate formatted checklist with card names, set info, variant details, and checkboxes
-- **Purpose**: Provides a printable/viewable reference for tracking collection progress
-- **Trigger**: View/Generate button
-- **Progression**: Configure collection → Generate list → View formatted output → Print or save
-- **Success criteria**: Clean formatting, all variants listed, proper ordering applied
+- **Functionality**: Generate formatted checklist with card names, set info, variant details, and checkboxes; export to PDF or print; generate placeholder cards for unchecked items
+- **Purpose**: Provides a printable/viewable reference for tracking collection progress and physical placeholders for binders
+- **Trigger**: View/Generate button, Export dropdown menu
+- **Progression**: Configure collection → View checklist → Export as PDF/Print → Generate placeholder cards for missing items
+- **Success criteria**: Clean formatting, all variants listed, proper ordering applied; PDF exports successfully; placeholder cards show correct information in binder-ready format
 
 ### Collection Save/Load
 - **Functionality**: Persist master set configurations for later reference
@@ -124,9 +124,11 @@ Animations should create moments of delight that evoke the Pokemon experience: c
 - Funnel: Filter variants
 - SortAscending/SortDescending: Sort order controls
 - Printer: Print checklist
+- FilePdf: Export PDF documents
+- Cards: Placeholder card generation
 - FloppyDisk: Save collection
 - Lightning: Quick actions
-- Cards: Deck/collection indicators
+- CaretDown: Dropdown menus
 
 **Spacing**:
 - Page padding: p-6 to p-8

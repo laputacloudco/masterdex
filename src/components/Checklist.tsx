@@ -6,9 +6,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Printer, CheckCircle, CurrencyDollar } from '@phosphor-icons/react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { Printer, CheckCircle, CurrencyDollar, FilePdf, CaretDown, Cards } from '@phosphor-icons/react';
 import { formatCardName, getVariantLabel } from '@/lib/cardUtils';
 import { CardPreview } from './CardPreview';
+import { exportChecklistToPDF, exportPlaceholdersToPDF, printChecklist } from '@/lib/exportUtils';
+import { toast } from 'sonner';
 
 interface ChecklistProps {
   cards: PokemonCard[];
@@ -29,8 +32,28 @@ export function Checklist({ cards, setName }: ChecklistProps) {
     });
   };
 
+  const handleExportPDF = async () => {
+    try {
+      await exportChecklistToPDF(cards, setName, checkedCards || []);
+      toast.success('Checklist exported to PDF!');
+    } catch (error) {
+      console.error('Failed to export PDF:', error);
+      toast.error('Failed to export PDF');
+    }
+  };
+
+  const handleExportPlaceholders = async () => {
+    try {
+      await exportPlaceholdersToPDF(cards, setName, checkedCards || []);
+      toast.success('Placeholders exported to PDF!');
+    } catch (error) {
+      console.error('Failed to export placeholders:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to export placeholders');
+    }
+  };
+
   const handlePrint = () => {
-    window.print();
+    printChecklist();
   };
 
   const checkedCount = checkedCards?.length || 0;
@@ -50,20 +73,41 @@ export function Checklist({ cards, setName }: ChecklistProps) {
   const remainingValue = totalValue - checkedValue;
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div>
-            <CardTitle className="text-2xl">Master Set Checklist</CardTitle>
-            <CardDescription className="mt-2">
-              {setName} • {totalCount} cards
-            </CardDescription>
+    <>
+      <Card>
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle className="text-2xl">Master Set Checklist</CardTitle>
+              <CardDescription className="mt-2">
+                {setName} • {totalCount} cards
+              </CardDescription>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Printer />
+                  Export
+                  <CaretDown />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={handlePrint}>
+                  <Printer className="mr-2" />
+                  Print Checklist
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportPDF}>
+                  <FilePdf className="mr-2" />
+                  Export Checklist PDF
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleExportPlaceholders}>
+                  <Cards className="mr-2" />
+                  Export Placeholders PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-          <Button onClick={handlePrint} variant="outline" className="gap-2">
-            <Printer />
-            Print
-          </Button>
-        </div>
         
         <div className="mt-4 space-y-2">
           <div className="flex items-center justify-between text-sm">
@@ -187,5 +231,33 @@ export function Checklist({ cards, setName }: ChecklistProps) {
         </ScrollArea>
       </CardContent>
     </Card>
+
+    <div id="checklist-print-content" style={{ display: 'none' }}>
+      <h1>{setName}</h1>
+      <h2>Master Set Checklist</h2>
+      <div className="progress">
+        Progress: {checkedCount} / {totalCount} ({progressPercent}%)
+      </div>
+      {cards.map((card) => {
+        const checked = isChecked(card.id);
+        return (
+          <div key={card.id} className="card-item">
+            <div className={`checkbox ${checked ? 'checked' : ''}`}></div>
+            <div>
+              <div className="card-name">{formatCardName(card)}</div>
+              <div className="card-details">
+                {card.setCode} • {card.variant !== 'normal' && `${getVariantLabel(card.variant)} • `}
+                {card.isHolo && card.variant === 'normal' && 'Holo • '}
+                {card.rarity}
+              </div>
+            </div>
+            {card.marketPrice && (
+              <span className="card-price">${card.marketPrice.toFixed(2)}</span>
+            )}
+          </div>
+        );
+      })}
+    </div>
+    </>
   );
 }
