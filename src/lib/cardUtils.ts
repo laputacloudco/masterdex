@@ -1,5 +1,5 @@
 import type { PokemonCard, SortOrder } from './types';
-import { POKEMON_SPECIES, getEvolutionChain } from './pokemonData';
+import { getEvolutionChain } from './pokemonData';
 
 export function sortCards(cards: PokemonCard[], sortOrder: SortOrder, selectedPokemon?: string[]): PokemonCard[] {
   const sorted = [...cards];
@@ -79,7 +79,7 @@ function sortByEvolutionChain(cards: PokemonCard[], selectedPokemon: string[]): 
   
   const result: PokemonCard[] = [];
   
-  setsByDate.forEach(([_setCode, setCards]) => {
+  setsByDate.forEach(([, setCards]) => {
     const chain = chains.get(selectedPokemon[0]?.toLowerCase()) || [];
     
     chain.forEach(pokemon => {

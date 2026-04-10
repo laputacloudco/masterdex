@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useKV } from '@github/spark/hooks';
+import { useKV } from '@/hooks/useKV';
 import { CAMEO_DATABASE, getCameoStatistics, type CameoEntry } from '@/lib/cameoData';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';

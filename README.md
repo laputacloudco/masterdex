@@ -1,23 +1,48 @@
-# ✨ Welcome to Your Spark Template!
-You've just launched your brand-new Spark Template Codespace — everything’s fired up and ready for you to explore, build, and create with Spark!
+# MasterDex
 
-This template is your blank canvas. It comes with a minimal setup to help you get started quickly with Spark development.
+A comprehensive Pokemon Trading Card Game master set planner. Build checklists for complete collections - by official set, by Pokemon, or by evolution chain - with full variant tracking.
 
-🚀 What's Inside?
-- A clean, minimal Spark environment
-- Pre-configured for local development
-- Ready to scale with your ideas
-  
-🧠 What Can You Do?
+## Features
 
-Right now, this is just a starting point — the perfect place to begin building and testing your Spark applications.
+- **Official Set Master Sets** - Track every card and variant in a TCG expansion
+- **Pokemon Master Sets** - Collect every card a specific Pokemon appears on across all sets
+- **Evolution Chain Ordering** - Group cards by evolution chain per set
+- **Variant Control** - Toggle specific variant types (normal, holo, reverse holo, full art, promo, collab, tournament, etc.)
+- **Cameo Database** - Track Pokemon that appear in other cards background art
+- **Binder-Ready Checklists** - Export to PDF or print, with placeholder card generation
+- **Save/Load Collections** - Persist configurations in your browser
 
-🧹 Just Exploring?
-No problem! If you were just checking things out and don’t need to keep this code:
+## Development
 
-- Simply delete your Spark.
-- Everything will be cleaned up — no traces left behind.
+```bash
+npm install
+npm run dev
+```
 
-📄 License For Spark Template Resources 
+## Build
 
-The Spark Template files and resources from GitHub are licensed under the terms of the MIT license, Copyright GitHub, Inc.
+```bash
+# Standalone build
+npm run build
+
+# GitHub Pages build (sets base path)
+npm run build:gh-pages
+
+# Spark build (includes Spark runtime plugins)
+npm run build:spark
+```
+
+## Checks
+
+```bash
+npm run lint        # ESLint
+npm run typecheck   # TypeScript type checking
+```
+
+## Data Source
+
+Card data is sourced from the [Pokemon TCG API](https://pokemontcg.io/).
+
+## License
+
+See [LICENSE](LICENSE).

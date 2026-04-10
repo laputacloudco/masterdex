@@ -6,7 +6,6 @@ export async function exportChecklistToPDF(
   setName: string
 ) {
   const pdf = new jsPDF();
-  const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
   const margin = 15;
   const lineHeight = 7;
@@ -66,7 +65,6 @@ export async function exportPlaceholdersToPDF(
   const cardsPerPage = cardsPerRow * cardsPerCol;
 
   uncheckedCards.forEach((card, i) => {
-    const pageIndex = Math.floor(i / cardsPerPage);
     const cardIndexOnPage = i % cardsPerPage;
     const row = Math.floor(cardIndexOnPage / cardsPerRow);
     const col = cardIndexOnPage % cardsPerRow;

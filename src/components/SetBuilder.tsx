@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CircleNotch, Sparkle, Star, Lightning, Trophy, Gift, Handshake, Medal, UserCircle } from '@phosphor-icons/react';
+  import { CircleNotch, Sparkle, Star, Lightning, Trophy, Gift, Handshake, UserCircle } from '@phosphor-icons/react';
 import { PokemonSelector } from './PokemonSelector';
 import { SetSelector } from './SetSelector';
 

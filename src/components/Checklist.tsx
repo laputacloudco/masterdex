@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { useKV } from '@github/spark/hooks';
+import { useMemo } from 'react';
+import { useKV } from '@/hooks/useKV';
 import type { PokemonCard } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';

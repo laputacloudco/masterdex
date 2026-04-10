@@ -1,5 +1,5 @@
 {
-    "name": "spark-template",
+    "name": "masterdex",
     "private": true,
     "version": "0.0.0",
     "type": "module",
@@ -7,7 +7,10 @@
         "dev": "vite",
         "kill": "fuser -k 5000/tcp",
         "build": "tsc -b --noCheck && vite build",
+        "build:spark": "VITE_BUILD_TARGET=spark tsc -b --noCheck && VITE_BUILD_TARGET=spark vite build",
+        "build:gh-pages": "VITE_BASE_PATH=/masterdex/ tsc -b --noCheck && VITE_BASE_PATH=/masterdex/ vite build",
         "lint": "eslint .",
+        "typecheck": "tsc -b",
         "optimize": "vite optimize",
         "preview": "vite preview"
     },
