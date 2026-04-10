@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef, useSyncExternalStore } from 'react';
+import { useEffect, useCallback, useRef, useSyncExternalStore, useMemo } from 'react';
 
 const STORAGE_PREFIX = 'masterdex:';
 
@@ -61,12 +61,10 @@ export function useKV<T>(key: string, defaultValue: T): [T, (value: T | ((prev: 
   const defaultRef = useRef(defaultValue);
   defaultRef.current = defaultValue;
 
-  // Snapshot function for useSyncExternalStore
   const getSnapshot = useCallback(() => {
     return localStorage.getItem(STORAGE_PREFIX + key);
   }, [key]);
 
-  // Subscribe to both in-tab and cross-tab changes
   const subscribeToKey = useCallback(
     (onStoreChange: () => void) => {
       return subscribe(key, onStoreChange);
@@ -76,20 +74,24 @@ export function useKV<T>(key: string, defaultValue: T): [T, (value: T | ((prev: 
 
   const rawValue = useSyncExternalStore(subscribeToKey, getSnapshot, () => null);
 
-  const value: T = rawValue === null ? defaultValue : (() => {
+  // Memoize parsed value so object/array refs are stable across renders
+  const value: T = useMemo(() => {
+    if (rawValue === null) return defaultRef.current;
     try {
       return JSON.parse(rawValue) as T;
     } catch {
-      return defaultValue;
+      return defaultRef.current;
     }
-  })();
+  }, [rawValue]);
 
-  // Initialize storage with default value if not set
+  // Initialize storage with default value if not set (run once per key)
+  const initializedKeys = useRef(new Set<string>());
   useEffect(() => {
-    if (localStorage.getItem(STORAGE_PREFIX + key) === null) {
-      writeToStorage(key, defaultValue);
+    if (!initializedKeys.current.has(key) && localStorage.getItem(STORAGE_PREFIX + key) === null) {
+      writeToStorage(key, defaultRef.current);
+      initializedKeys.current.add(key);
     }
-  }, [key, defaultValue]);
+  }, [key]);
 
   const setValue = useCallback(
     (update: T | ((prev: T) => T)) => {
