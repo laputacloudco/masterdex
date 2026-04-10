@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { X, Cards, Spinner } from '@phosphor-icons/react';
+import { X, Cards, CircleNotch } from '@phosphor-icons/react';
 import { fetchAllSets } from '@/lib/pokemonTcgApi';
 import type { PokemonSet } from '@/lib/types';
 
@@ -46,7 +46,7 @@ export function SetSelector({ selectedSets, onSelectSet, onRemoveSet }: SetSelec
         <ScrollArea className="h-64 rounded-lg border p-2">
           {isLoading ? (
             <div className="flex items-center justify-center h-full">
-              <Spinner className="animate-spin text-muted-foreground" size={32} />
+              <CircleNotch className="animate-spin text-muted-foreground" size={32} />
             </div>
           ) : (
             <div className="space-y-1">
