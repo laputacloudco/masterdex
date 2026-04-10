@@ -17,6 +17,9 @@ export interface PokemonCard {
   rarity: string;
   isHolo: boolean;
   imageUrl?: string;
+  largeImageUrl?: string;
+  marketPrice?: number;
+  tcgPlayerUrl?: string;
 }
 
 export interface PokemonSet {
@@ -33,7 +36,7 @@ export interface PokemonSpecies {
   evolvesTo?: string[];
 }
 
-export interface MasterSetConfig {
+export interface SavedSetlist {
   id: string;
   name: string;
   type: MasterSetType;
@@ -41,6 +44,7 @@ export interface MasterSetConfig {
   selectedSets: string[];
   selectedPokemon: string[];
   sortOrder: SortOrder;
+  cardCount: number;
   createdAt: string;
   updatedAt: string;
 }

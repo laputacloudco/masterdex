@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useKV } from '@github/spark/hooks';
-import type { PokemonCard, MasterSetType, SortOrder } from '@/lib/types';
+import type { PokemonCard, MasterSetType, SortOrder, SavedSetlist } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SetBuilder } from '@/components/SetBuilder';
 import { Checklist } from '@/components/Checklist';
+import { SavedSetlists } from '@/components/SavedSetlists';
 import { fetchCardsForSet, fetchCardsForPokemon } from '@/lib/pokemonTcgApi';
 import { sortCards } from '@/lib/cardUtils';
 import { toast } from 'sonner';
@@ -71,6 +72,15 @@ function App() {
     fetchCards();
   }, [masterSetType, includeAllVariants, sortOrder, selectedPokemon, selectedSets]);
 
+  const handleLoadSetlist = (setlist: SavedSetlist) => {
+    setMasterSetType(setlist.type);
+    setIncludeAllVariants(setlist.includeAllVariants);
+    setSortOrder(setlist.sortOrder);
+    setSelectedPokemon(setlist.selectedPokemon);
+    setSelectedSets(setlist.selectedSets);
+    setActiveTab('builder');
+  };
+
   const checklistName = 
     masterSetType === 'official-set' && selectedSets
       ? (selectedSets.length === 1 ? selectedSets[0] : `${selectedSets.length} Sets`)
@@ -102,20 +112,34 @@ function App() {
 
           <TabsContent value="builder" className="mt-8">
             <div className="max-w-3xl mx-auto">
-              <SetBuilder
-                masterSetType={masterSetType}
-                setMasterSetType={setMasterSetType}
-                includeAllVariants={includeAllVariants}
-                setIncludeAllVariants={setIncludeAllVariants}
-                sortOrder={sortOrder}
-                setSortOrder={setSortOrder}
-                selectedPokemon={selectedPokemon}
-                setSelectedPokemon={setSelectedPokemon}
-                selectedSets={selectedSets}
-                setSelectedSets={setSelectedSets}
-                isLoading={isLoading}
-                cardCount={cards.length}
-              />
+              <div className="space-y-6">
+                <SavedSetlists
+                  currentConfig={{
+                    masterSetType,
+                    includeAllVariants,
+                    selectedSets,
+                    selectedPokemon,
+                    sortOrder,
+                    cardCount: cards.length,
+                  }}
+                  onLoad={handleLoadSetlist}
+                />
+                
+                <SetBuilder
+                  masterSetType={masterSetType}
+                  setMasterSetType={setMasterSetType}
+                  includeAllVariants={includeAllVariants}
+                  setIncludeAllVariants={setIncludeAllVariants}
+                  sortOrder={sortOrder}
+                  setSortOrder={setSortOrder}
+                  selectedPokemon={selectedPokemon}
+                  setSelectedPokemon={setSelectedPokemon}
+                  selectedSets={selectedSets}
+                  setSelectedSets={setSelectedSets}
+                  isLoading={isLoading}
+                  cardCount={cards.length}
+                />
+              </div>
             </div>
           </TabsContent>
 

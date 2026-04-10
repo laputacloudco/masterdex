@@ -66,6 +66,14 @@ function isHoloCard(card: TCGCard): boolean {
 export function mapTCGCardToCard(tcgCard: TCGCard): PokemonCard {
   const pokemonName = tcgCard.name.split(' ')[0];
   
+  let marketPrice: number | undefined;
+  if (tcgCard.tcgplayer?.prices) {
+    const priceTypes = Object.values(tcgCard.tcgplayer.prices);
+    if (priceTypes.length > 0) {
+      marketPrice = priceTypes[0].market || priceTypes[0].mid;
+    }
+  }
+  
   return {
     id: tcgCard.id,
     name: tcgCard.name,
@@ -78,6 +86,9 @@ export function mapTCGCardToCard(tcgCard: TCGCard): PokemonCard {
     rarity: tcgCard.rarity || 'Common',
     isHolo: isHoloCard(tcgCard),
     imageUrl: tcgCard.images.small,
+    largeImageUrl: tcgCard.images.large,
+    marketPrice,
+    tcgPlayerUrl: tcgCard.tcgplayer?.url,
   };
 }
 

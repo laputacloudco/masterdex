@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useKV } from '@github/spark/hooks';
 import type { PokemonCard } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,8 +6,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Printer, CheckCircle } from '@phosphor-icons/react';
+import { Printer, CheckCircle, CurrencyDollar } from '@phosphor-icons/react';
 import { formatCardName, getVariantLabel } from '@/lib/cardUtils';
+import { CardPreview } from './CardPreview';
 
 interface ChecklistProps {
   cards: PokemonCard[];
@@ -35,6 +36,18 @@ export function Checklist({ cards, setName }: ChecklistProps) {
   const checkedCount = checkedCards?.length || 0;
   const totalCount = cards.length;
   const progressPercent = totalCount > 0 ? Math.round((checkedCount / totalCount) * 100) : 0;
+
+  const totalValue = useMemo(() => {
+    return cards.reduce((sum, card) => sum + (card.marketPrice || 0), 0);
+  }, [cards]);
+
+  const checkedValue = useMemo(() => {
+    return cards
+      .filter(card => isChecked(card.id))
+      .reduce((sum, card) => sum + (card.marketPrice || 0), 0);
+  }, [cards, checkedCards]);
+
+  const remainingValue = totalValue - checkedValue;
 
   return (
     <Card>
@@ -65,6 +78,30 @@ export function Checklist({ cards, setName }: ChecklistProps) {
               style={{ width: `${progressPercent}%` }}
             />
           </div>
+          
+          {totalValue > 0 && (
+            <div className="flex items-center justify-between text-sm pt-2 border-t">
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <CurrencyDollar size={16} />
+                <span>Market Value</span>
+              </div>
+              <div className="flex gap-4 font-medium">
+                <span className="text-accent">
+                  ${checkedValue.toFixed(2)}
+                </span>
+                <span className="text-muted-foreground">/</span>
+                <span>
+                  ${totalValue.toFixed(2)}
+                </span>
+              </div>
+            </div>
+          )}
+          
+          {remainingValue > 0 && (
+            <div className="text-xs text-muted-foreground text-right">
+              ${remainingValue.toFixed(2)} remaining
+            </div>
+          )}
         </div>
       </CardHeader>
 
@@ -74,69 +111,76 @@ export function Checklist({ cards, setName }: ChecklistProps) {
             {cards.map((card) => {
               const checked = isChecked(card.id);
               return (
-                <div
-                  key={card.id}
-                  className={`flex items-start gap-3 p-3 rounded-lg border transition-all ${
-                    checked 
-                      ? 'bg-muted/50 border-accent/50' 
-                      : 'hover:bg-accent/5 hover:border-accent/30'
-                  }`}
-                >
-                  <Checkbox
-                    id={card.id}
-                    checked={checked}
-                    onCheckedChange={() => toggleCheck(card.id)}
-                    className="mt-0.5"
-                  />
-                  
-                  {card.imageUrl && (
-                    <img 
-                      src={card.imageUrl} 
-                      alt={card.name}
-                      className="w-16 h-22 object-cover rounded border"
+                <CardPreview key={card.id} card={card}>
+                  <div
+                    className={`flex items-start gap-3 p-3 rounded-lg border transition-all ${
+                      checked 
+                        ? 'bg-muted/50 border-accent/50' 
+                        : 'hover:bg-accent/5 hover:border-accent/30'
+                    }`}
+                  >
+                    <Checkbox
+                      id={card.id}
+                      checked={checked}
+                      onCheckedChange={() => toggleCheck(card.id)}
+                      className="mt-0.5"
                     />
-                  )}
-                  
-                  <div className="flex-1">
-                    <label
-                      htmlFor={card.id}
-                      className={`text-sm font-medium cursor-pointer block ${
-                        checked ? 'line-through text-muted-foreground' : ''
-                      }`}
-                    >
-                      {formatCardName(card)}
-                    </label>
                     
-                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                      <Badge variant="outline" className="text-xs">
-                        {card.setCode}
-                      </Badge>
+                    {card.imageUrl && (
+                      <img 
+                        src={card.imageUrl} 
+                        alt={card.name}
+                        className="w-16 h-22 object-cover rounded border"
+                      />
+                    )}
+                    
+                    <div className="flex-1">
+                      <label
+                        htmlFor={card.id}
+                        className={`text-sm font-medium cursor-pointer block ${
+                          checked ? 'line-through text-muted-foreground' : ''
+                        }`}
+                      >
+                        {formatCardName(card)}
+                      </label>
                       
-                      {card.variant !== 'normal' && (
-                        <Badge 
-                          variant="secondary" 
-                          className={`text-xs ${card.isHolo ? 'holo-shimmer' : ''}`}
-                        >
-                          {getVariantLabel(card.variant)}
+                      <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                        <Badge variant="outline" className="text-xs">
+                          {card.setCode}
                         </Badge>
-                      )}
-                      
-                      {card.isHolo && card.variant === 'normal' && (
-                        <Badge variant="secondary" className="text-xs holo-shimmer">
-                          Holo
-                        </Badge>
-                      )}
-                      
-                      <span className="text-xs text-muted-foreground">
-                        {card.rarity}
-                      </span>
+                        
+                        {card.variant !== 'normal' && (
+                          <Badge 
+                            variant="secondary" 
+                            className={`text-xs ${card.isHolo ? 'holo-shimmer' : ''}`}
+                          >
+                            {getVariantLabel(card.variant)}
+                          </Badge>
+                        )}
+                        
+                        {card.isHolo && card.variant === 'normal' && (
+                          <Badge variant="secondary" className="text-xs holo-shimmer">
+                            Holo
+                          </Badge>
+                        )}
+                        
+                        <span className="text-xs text-muted-foreground">
+                          {card.rarity}
+                        </span>
+                        
+                        {card.marketPrice && (
+                          <Badge variant="outline" className="text-xs font-mono">
+                            ${card.marketPrice.toFixed(2)}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  {checked && (
-                    <CheckCircle weight="fill" className="text-accent flex-shrink-0" size={20} />
-                  )}
-                </div>
+                    {checked && (
+                      <CheckCircle weight="fill" className="text-accent flex-shrink-0" size={20} />
+                    )}
+                  </div>
+                </CardPreview>
               );
             })}
           </div>
