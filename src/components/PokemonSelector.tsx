@@ -3,6 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { MagnifyingGlass, X, Lightning } from '@phosphor-icons/react';
 import { searchPokemon } from '@/lib/pokemonTcgApi';
 import { getEvolutionChain } from '@/lib/pokemonData';
@@ -11,14 +13,16 @@ interface PokemonSelectorProps {
   selectedPokemon: string[];
   onSelectPokemon: (pokemon: string | string[]) => void;
   onRemovePokemon: (pokemon: string) => void;
-  showEvolutionChain?: boolean;
+  includeEvolutionChain: boolean;
+  setIncludeEvolutionChain: (value: boolean) => void;
 }
 
 export function PokemonSelector({ 
   selectedPokemon, 
   onSelectPokemon, 
   onRemovePokemon,
-  showEvolutionChain 
+  includeEvolutionChain,
+  setIncludeEvolutionChain
 }: PokemonSelectorProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<string[]>([]);
@@ -49,7 +53,7 @@ export function PokemonSelector({
   }, [searchTerm, selectedPokemon]);
 
   const handleSelect = (pokemon: string) => {
-    if (showEvolutionChain) {
+    if (includeEvolutionChain) {
       const chain = getEvolutionChain(pokemon);
       const newPokemon = chain.filter(p => !selectedPokemon.includes(p));
       if (newPokemon.length > 0) {
@@ -67,16 +71,29 @@ export function PokemonSelector({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Lightning weight="fill" className="text-primary" />
-          {showEvolutionChain ? 'Select Evolution Chain' : 'Select Pokemon'}
+          Select Pokemon
         </CardTitle>
         <CardDescription>
-          {showEvolutionChain 
-            ? 'Add Pokemon to include their full evolution lines' 
-            : 'Choose which Pokemon to include in your master set'
-          }
+          Choose which Pokemon to include in your master set
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+          <Switch
+            id="evolution-chain-toggle"
+            checked={includeEvolutionChain}
+            onCheckedChange={setIncludeEvolutionChain}
+          />
+          <div className="flex-1">
+            <Label htmlFor="evolution-chain-toggle" className="cursor-pointer font-medium">
+              Include Evolution Chains
+            </Label>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Automatically add full evolution lines when selecting Pokemon
+            </p>
+          </div>
+        </div>
+
         <div className="relative">
           <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -96,11 +113,11 @@ export function PokemonSelector({
                 onClick={() => handleSelect(pokemon)}
                 className="w-full text-left px-3 py-2 rounded hover:bg-accent transition-colors"
               >
-                {pokemon}
-                {showEvolutionChain && (
-                  <span className="text-xs text-muted-foreground ml-2">
+                <span className="font-medium">{pokemon}</span>
+                {includeEvolutionChain && (
+                  <Badge variant="secondary" className="ml-2 text-xs">
                     + Evolution Chain
-                  </span>
+                  </Badge>
                 )}
               </button>
             ))}

@@ -21,6 +21,8 @@ interface SetBuilderProps {
   setSelectedPokemon: (value: string[]) => void;
   selectedSets: string[] | undefined;
   setSelectedSets: (value: string[]) => void;
+  includeEvolutionChain: boolean | undefined;
+  setIncludeEvolutionChain: (value: boolean) => void;
   isLoading: boolean;
   cardCount: number;
 }
@@ -50,6 +52,8 @@ export function SetBuilder({
   setSelectedPokemon,
   selectedSets,
   setSelectedSets,
+  includeEvolutionChain,
+  setIncludeEvolutionChain,
   isLoading,
   cardCount,
 }: SetBuilderProps) {
@@ -58,6 +62,7 @@ export function SetBuilder({
   const currentSortOrder = sortOrder || 'chronological';
   const currentSelectedPokemon = selectedPokemon || [];
   const currentSelectedSets = selectedSets || [];
+  const currentIncludeEvolutionChain = includeEvolutionChain || false;
 
   const handleVariantToggle = (variant: keyof VariantFilters) => {
     setVariantFilters({
@@ -149,12 +154,6 @@ export function SetBuilder({
               <RadioGroupItem value="pokemon-collection" id="pokemon-collection" />
               <Label htmlFor="pokemon-collection" className="cursor-pointer">
                 Pokemon Collection - All cards featuring specific Pokemon
-              </Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="evolution-chain" id="evolution-chain" />
-              <Label htmlFor="evolution-chain" className="cursor-pointer">
-                Evolution Chain - Complete evolution lines across all sets
               </Label>
             </div>
           </RadioGroup>
@@ -468,7 +467,8 @@ export function SetBuilder({
           onRemovePokemon={(pokemon) => {
             setSelectedPokemon(currentSelectedPokemon.filter(p => p !== pokemon));
           }}
-          showEvolutionChain={currentMasterSetType === 'evolution-chain'}
+          includeEvolutionChain={currentIncludeEvolutionChain}
+          setIncludeEvolutionChain={setIncludeEvolutionChain}
         />
       )}
 
@@ -488,7 +488,7 @@ export function SetBuilder({
               )}
               <SelectItem value="chronological">Chronological (Release Date)</SelectItem>
               <SelectItem value="grouped-by-set">Grouped by Set</SelectItem>
-              {currentMasterSetType === 'evolution-chain' && (
+              {currentMasterSetType === 'pokemon-collection' && currentIncludeEvolutionChain && (
                 <SelectItem value="evolution-chain">Evolution Chain Order</SelectItem>
               )}
             </SelectContent>

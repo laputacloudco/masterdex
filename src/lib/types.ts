@@ -2,7 +2,7 @@ export type CardVariant = 'normal' | 'reverse-holo' | 'holo' | 'full-art' | 'sec
 
 export type SortOrder = 'set-order' | 'chronological' | 'grouped-by-set' | 'evolution-chain';
 
-export type MasterSetType = 'official-set' | 'pokemon-collection' | 'evolution-chain';
+export type MasterSetType = 'official-set' | 'pokemon-collection';
 
 export interface VariantFilters {
   normal: boolean;
@@ -59,6 +59,7 @@ export interface SavedSetlist {
   selectedPokemon: string[];
   sortOrder: SortOrder;
   cardCount: number;
+  includeEvolutionChain?: boolean;
   createdAt: string;
   updatedAt: string;
 }
