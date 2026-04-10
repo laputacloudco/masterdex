@@ -4,98 +4,98 @@ import type { PokemonCard } from './types';
 export async function exportChecklistToPDF(
   cards: PokemonCard[],
   setName: string,
-  checkedCards: string[]
+  const lineHeight = 7;
 ) {
   const pdf = new jsPDF();
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
   const margin = 15;
-  const lineHeight = 7;
+  pdf.setFont('helvetic
   let y = margin;
 
   pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(18);
+  for (const card of c
   pdf.text('Pokemon Master Set Checklist', margin, y);
-  y += 10;
+    }
 
-  pdf.setFontSize(12);
+    pdf.setFont('helve
   pdf.text(setName, margin, y);
-  y += 8;
+    
 
-  pdf.setFont('helvetica', 'normal');
-  pdf.setFontSize(10);
-  const checkedCount = checkedCards.length;
-  pdf.text(`Progress: ${checkedCount} / ${cards.length} (${Math.round((checkedCount / cards.length) * 100)}%)`, margin, y);
-  y += 12;
-
-  pdf.setFontSize(9);
-  
-  for (const card of cards) {
-    if (y > pageHeight - margin) {
-      pdf.addPage();
-      y = margin;
-    }
-
-    const checked = checkedCards.includes(card.id);
-    
-    pdf.setFont('helvetica', checked ? 'normal' : 'bold');
-    
-    const checkbox = checked ? '☑' : '☐';
-    pdf.text(checkbox, margin, y);
-    
-    const cardText = `${card.setNumber} - ${card.name}`;
-    pdf.text(cardText, margin + 8, y);
-    
-    const variantText = card.variant !== 'normal' ? ` (${card.variant})` : '';
-    const holoText = card.isHolo && card.variant === 'normal' ? ' (Holo)' : '';
-    const detailText = `${card.setCode}${variantText}${holoText}`;
-    pdf.setFont('helvetica', 'normal');
+    const variantText = card.variant 
+    const detailText =
     pdf.setFontSize(8);
-    pdf.text(detailText, margin + 8, y + 3.5);
     
-    if (card.marketPrice) {
-      const priceText = `$${card.marketPrice.toFixed(2)}`;
-      const priceWidth = pdf.getTextWidth(priceText);
-      pdf.text(priceText, pageWidth - margin - priceWidth, y);
-    }
-    
-    pdf.setFontSize(9);
-    y += lineHeight;
-  }
+      cons
 
-  pdf.save(`${setName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_checklist.pdf`);
+    
+  
+
+}
+export async functio
+  setName: string
+) {
+
+    throw new Error('No unchecked cards to generate
+    
+  const cardWidth = 63;
+    
+  const cardsPerPage = cardsPerRow * card
+  const marginY = 10;
+    
+    const pageIndex = Math.floor(i / cardsPerPage);
+    const row = Math.floor(cardIndexOn
+    
+      pdf.addPage();
+    
+    const y = marginY + (row * cardHeight);
+    pdf.setDrawColor(200, 200, 200);
+    pdf.roundedRect(x, 
+    pdf.setFontSize(8);
+    
+    
+    pdf.setFontSize(7);
+    
+      pdf.text(`${card.variant}`, x + 3, y + 17);
+    
+    
+    pdf.setTextColor(0,
+
 }
 
-export async function exportProxiesPDF(
-  cards: PokemonCard[],
-  setName: string,
-  checkedCards: string[]
-) {
-  const uncheckedCards = cards.filter(card => !checkedCards.includes(card.id));
-  
-  if (uncheckedCards.length === 0) {
-    throw new Error('No unchecked cards to generate proxies for!');
-  }
+  if (!printContent) return;
+}
 
-  const pdf = new jsPDF('portrait', 'mm', 'a4');
+    <!DOCTYPE html>
+      <head>
+        <style>
+            body { margi
+   
+          body { font-family: Arial, sans-serif; }
+  
+          .card-item { 
+            align-items: center; 
+   
+
+            width: 16px; 
   const cardWidth = 63;
-  const cardHeight = 88;
-  const cardsPerRow = 3;
-  const cardsPerCol = 3;
-  const cardsPerPage = cardsPerRow * cardsPerCol;
-  const marginX = (pdf.internal.pageSize.getWidth() - (cardsPerRow * cardWidth)) / 2;
+            flex-shrink:
+          .checkbox.chec
+            position: re
+          .checkbox.checked::after {
+            color: white;
   const marginY = 10;
   
-  for (let i = 0; i < uncheckedCards.length; i++) {
-    const card = uncheckedCards[i];
+          .card-name { 
+            font-weight: bold;
     const pageIndex = Math.floor(i / cardsPerPage);
-    const cardIndexOnPage = i % cardsPerPage;
-    const row = Math.floor(cardIndexOnPage / cardsPerRow);
-    const col = cardIndexOnPage % cardsPerRow;
+            font-size: 10px; 
+            margin-left: 28px;
+          .card-price {
     
-    if (i > 0 && cardIndexOnPage === 0) {
+          }
       pdf.addPage();
-    }
+     
     
     const x = marginX + (col * cardWidth);
     const y = marginY + (row * cardHeight);
@@ -119,11 +119,11 @@ export async function exportProxiesPDF(
     
     pdf.setFontSize(6);
     pdf.setTextColor(150, 150, 150);
-    pdf.text('PROXY', x + cardWidth / 2, y + cardHeight / 2, { align: 'center' });
+    pdf.text('PLACEHOLDER', x + cardWidth / 2, y + cardHeight / 2, { align: 'center' });
     pdf.setTextColor(0, 0, 0);
   }
 
-  pdf.save(`${setName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_proxies.pdf`);
+  pdf.save(`${setName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_placeholders.pdf`);
 }
 
 export function printChecklist() {
@@ -198,10 +198,10 @@ export function printChecklist() {
   `);
 
   printWindow.document.close();
-  printWindow.focus();
+
   
   setTimeout(() => {
     printWindow.print();
-    printWindow.close();
+
   }, 250);
-}
+
