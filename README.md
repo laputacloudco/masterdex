@@ -27,9 +27,6 @@ npm run build
 
 # GitHub Pages build (sets base path)
 npm run build:gh-pages
-
-# Spark build (includes Spark runtime plugins)
-npm run build:spark
 ```
 
 ## Checks
