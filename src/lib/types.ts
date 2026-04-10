@@ -1,0 +1,51 @@
+export type CardVariant = 'normal' | 'reverse-holo' | 'holo' | 'promo' | 'tournament' | 'collab';
+
+export type SortOrder = 'set-order' | 'chronological' | 'grouped-by-set' | 'evolution-chain';
+
+export type MasterSetType = 'official-set' | 'pokemon-collection' | 'evolution-chain';
+
+export interface PokemonCard {
+  id: string;
+  name: string;
+  pokemonName: string;
+  setName: string;
+  setCode: string;
+  setNumber: string;
+  releaseDate: string;
+  variant: CardVariant;
+  artVariant?: string;
+  rarity: string;
+  isHolo: boolean;
+  imageUrl?: string;
+}
+
+export interface PokemonSet {
+  code: string;
+  name: string;
+  releaseDate: string;
+  totalCards: number;
+}
+
+export interface PokemonSpecies {
+  name: string;
+  evolutionStage: number;
+  evolvesFrom?: string;
+  evolvesTo?: string[];
+}
+
+export interface MasterSetConfig {
+  id: string;
+  name: string;
+  type: MasterSetType;
+  includeAllVariants: boolean;
+  selectedSets: string[];
+  selectedPokemon: string[];
+  sortOrder: SortOrder;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChecklistItem {
+  card: PokemonCard;
+  checked: boolean;
+}
