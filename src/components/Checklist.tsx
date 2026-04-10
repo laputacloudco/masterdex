@@ -10,7 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Printer, CheckCircle, CurrencyDollar, FilePdf, CaretDown, Cards } from '@phosphor-icons/react';
 import { formatCardName, getVariantLabel } from '@/lib/cardUtils';
 import { CardPreview } from './CardPreview';
-import { exportChecklistToPDF, exportPlaceholdersToPDF, printChecklist } from '@/lib/exportUtils';
+import { exportChecklistToPDF, exportProxiesPDF, printChecklist } from '@/lib/exportUtils';
 import { toast } from 'sonner';
 
 interface ChecklistProps {
@@ -42,13 +42,13 @@ export function Checklist({ cards, setName }: ChecklistProps) {
     }
   };
 
-  const handleExportPlaceholders = async () => {
+  const handleExportProxies = async () => {
     try {
-      await exportPlaceholdersToPDF(cards, setName, checkedCards || []);
-      toast.success('Placeholders exported to PDF!');
+      await exportProxiesPDF(cards, setName, checkedCards || []);
+      toast.success('Proxies exported to PDF!');
     } catch (error) {
-      console.error('Failed to export placeholders:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to export placeholders');
+      console.error('Failed to export proxies:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to export proxies');
     }
   };
 
@@ -101,9 +101,9 @@ export function Checklist({ cards, setName }: ChecklistProps) {
                   Export Checklist PDF
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleExportPlaceholders}>
+                <DropdownMenuItem onClick={handleExportProxies}>
                   <Cards className="mr-2" />
-                  Export Placeholders PDF
+                  Export Proxies PDF
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

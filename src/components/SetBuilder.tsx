@@ -1,8 +1,8 @@
-import type { MasterSetType, SortOrder } from '@/lib/types';
+import type { MasterSetType, SortOrder, VariantFilters } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { CircleNotch } from '@phosphor-icons/react';
@@ -12,8 +12,8 @@ import { SetSelector } from './SetSelector';
 interface SetBuilderProps {
   masterSetType: MasterSetType | undefined;
   setMasterSetType: (value: MasterSetType) => void;
-  includeAllVariants: boolean | undefined;
-  setIncludeAllVariants: (value: boolean) => void;
+  variantFilters: VariantFilters | undefined;
+  setVariantFilters: (value: VariantFilters) => void;
   sortOrder: SortOrder | undefined;
   setSortOrder: (value: SortOrder) => void;
   selectedPokemon: string[] | undefined;
@@ -24,11 +24,19 @@ interface SetBuilderProps {
   cardCount: number;
 }
 
+const DEFAULT_VARIANT_FILTERS: VariantFilters = {
+  normal: true,
+  holo: true,
+  reverseHolo: true,
+  promo: true,
+  tournament: true,
+};
+
 export function SetBuilder({
   masterSetType,
   setMasterSetType,
-  includeAllVariants,
-  setIncludeAllVariants,
+  variantFilters,
+  setVariantFilters,
   sortOrder,
   setSortOrder,
   selectedPokemon,
@@ -39,10 +47,17 @@ export function SetBuilder({
   cardCount,
 }: SetBuilderProps) {
   const currentMasterSetType = masterSetType || 'pokemon-collection';
-  const currentIncludeAllVariants = includeAllVariants ?? true;
+  const currentVariantFilters = variantFilters || DEFAULT_VARIANT_FILTERS;
   const currentSortOrder = sortOrder || 'chronological';
   const currentSelectedPokemon = selectedPokemon || [];
   const currentSelectedSets = selectedSets || [];
+
+  const handleVariantToggle = (variant: keyof VariantFilters) => {
+    setVariantFilters({
+      ...currentVariantFilters,
+      [variant]: !currentVariantFilters[variant],
+    });
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -78,22 +93,61 @@ export function SetBuilder({
       <Card>
         <CardHeader>
           <CardTitle>Card Variants</CardTitle>
-          <CardDescription>Include all variants or only unique artwork</CardDescription>
+          <CardDescription>Select which card variants to include in your checklist</CardDescription>
         </CardHeader>
-        <CardContent className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <Label htmlFor="variants-toggle" className="text-base">
-              Include All Variants
-            </Label>
-            <p className="text-sm text-muted-foreground">
-              Holos, reverse holos, promos, and special releases
-            </p>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="variant-normal"
+                checked={currentVariantFilters.normal}
+                onCheckedChange={() => handleVariantToggle('normal')}
+              />
+              <Label htmlFor="variant-normal" className="cursor-pointer">
+                Normal Cards
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="variant-holo"
+                checked={currentVariantFilters.holo}
+                onCheckedChange={() => handleVariantToggle('holo')}
+              />
+              <Label htmlFor="variant-holo" className="cursor-pointer">
+                Holo & Special Finishes
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="variant-reverse-holo"
+                checked={currentVariantFilters.reverseHolo}
+                onCheckedChange={() => handleVariantToggle('reverseHolo')}
+              />
+              <Label htmlFor="variant-reverse-holo" className="cursor-pointer">
+                Reverse Holo
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="variant-promo"
+                checked={currentVariantFilters.promo}
+                onCheckedChange={() => handleVariantToggle('promo')}
+              />
+              <Label htmlFor="variant-promo" className="cursor-pointer">
+                Promos & Collaborations
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="variant-tournament"
+                checked={currentVariantFilters.tournament}
+                onCheckedChange={() => handleVariantToggle('tournament')}
+              />
+              <Label htmlFor="variant-tournament" className="cursor-pointer">
+                Tournament Prizes
+              </Label>
+            </div>
           </div>
-          <Switch
-            id="variants-toggle"
-            checked={currentIncludeAllVariants}
-            onCheckedChange={setIncludeAllVariants}
-          />
         </CardContent>
       </Card>
 

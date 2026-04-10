@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useKV } from '@github/spark/hooks';
-import type { SavedSetlist, MasterSetType, SortOrder } from '@/lib/types';
+import type { SavedSetlist, MasterSetType, SortOrder, VariantFilters } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 interface SavedSetlistsProps {
   currentConfig: {
     masterSetType: MasterSetType | undefined;
-    includeAllVariants: boolean | undefined;
+    variantFilters: VariantFilters | undefined;
     selectedSets: string[] | undefined;
     selectedPokemon: string[] | undefined;
     sortOrder: SortOrder | undefined;
@@ -42,7 +42,13 @@ export function SavedSetlists({ currentConfig, onLoad }: SavedSetlistsProps) {
       id: `setlist-${Date.now()}`,
       name: setlistName.trim(),
       type: currentConfig.masterSetType,
-      includeAllVariants: currentConfig.includeAllVariants ?? true,
+      variantFilters: currentConfig.variantFilters || {
+        normal: true,
+        holo: true,
+        reverseHolo: true,
+        promo: true,
+        tournament: true,
+      },
       selectedSets: currentConfig.selectedSets || [],
       selectedPokemon: currentConfig.selectedPokemon || [],
       sortOrder: currentConfig.sortOrder || 'chronological',

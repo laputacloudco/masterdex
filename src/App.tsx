@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useKV } from '@github/spark/hooks';
-import type { PokemonCard, MasterSetType, SortOrder, SavedSetlist } from '@/lib/types';
+import type { PokemonCard, MasterSetType, SortOrder, SavedSetlist, VariantFilters } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SetBuilder } from '@/components/SetBuilder';
 import { Checklist } from '@/components/Checklist';
@@ -9,9 +9,17 @@ import { fetchCardsForSet, fetchCardsForPokemon } from '@/lib/pokemonTcgApi';
 import { sortCards } from '@/lib/cardUtils';
 import { toast } from 'sonner';
 
+const DEFAULT_VARIANT_FILTERS: VariantFilters = {
+  normal: true,
+  holo: true,
+  reverseHolo: true,
+  promo: true,
+  tournament: true,
+};
+
 function App() {
   const [masterSetType, setMasterSetType] = useKV<MasterSetType>('config-type', 'pokemon-collection');
-  const [includeAllVariants, setIncludeAllVariants] = useKV<boolean>('config-variants', true);
+  const [variantFilters, setVariantFilters] = useKV<VariantFilters>('config-variants', DEFAULT_VARIANT_FILTERS);
   const [sortOrder, setSortOrder] = useKV<SortOrder>('config-sort', 'chronological');
   const [selectedPokemon, setSelectedPokemon] = useKV<string[]>('config-pokemon', []);
   const [selectedSets, setSelectedSets] = useKV<string[]>('config-sets', []);
@@ -47,18 +55,30 @@ function App() {
           fetchedCards = results.flat();
         }
 
-        if (!includeAllVariants) {
-          const uniqueArtCards = new Map<string, PokemonCard>();
-          fetchedCards.forEach(card => {
-            const key = `${card.pokemonName}-${card.setCode}-${card.setNumber.split(' ')[0]}`;
-            if (!uniqueArtCards.has(key) || card.variant === 'normal') {
-              uniqueArtCards.set(key, card);
-            }
-          });
-          fetchedCards = Array.from(uniqueArtCards.values());
-        }
+        const currentVariantFilters = variantFilters || DEFAULT_VARIANT_FILTERS;
+        
+        const filteredCards = fetchedCards.filter(card => {
+          if (card.variant === 'normal' && card.isHolo) {
+            return currentVariantFilters.holo;
+          }
+          
+          switch (card.variant) {
+            case 'normal':
+              return currentVariantFilters.normal;
+            case 'holo':
+              return currentVariantFilters.holo;
+            case 'reverse-holo':
+              return currentVariantFilters.reverseHolo;
+            case 'promo':
+              return currentVariantFilters.promo;
+            case 'tournament':
+              return currentVariantFilters.tournament;
+            default:
+              return true;
+          }
+        });
 
-        const sorted = sortCards(fetchedCards, sortOrder || 'chronological', selectedPokemon || []);
+        const sorted = sortCards(filteredCards, sortOrder || 'chronological', selectedPokemon || []);
         setCards(sorted);
       } catch (error) {
         console.error('Error fetching cards:', error);
@@ -70,11 +90,11 @@ function App() {
     };
 
     fetchCards();
-  }, [masterSetType, includeAllVariants, sortOrder, selectedPokemon, selectedSets]);
+  }, [masterSetType, variantFilters, sortOrder, selectedPokemon, selectedSets]);
 
   const handleLoadSetlist = (setlist: SavedSetlist) => {
     setMasterSetType(setlist.type);
-    setIncludeAllVariants(setlist.includeAllVariants);
+    setVariantFilters(setlist.variantFilters);
     setSortOrder(setlist.sortOrder);
     setSelectedPokemon(setlist.selectedPokemon);
     setSelectedSets(setlist.selectedSets);
@@ -116,7 +136,7 @@ function App() {
                 <SavedSetlists
                   currentConfig={{
                     masterSetType,
-                    includeAllVariants,
+                    variantFilters,
                     selectedSets,
                     selectedPokemon,
                     sortOrder,
@@ -128,8 +148,8 @@ function App() {
                 <SetBuilder
                   masterSetType={masterSetType}
                   setMasterSetType={setMasterSetType}
-                  includeAllVariants={includeAllVariants}
-                  setIncludeAllVariants={setIncludeAllVariants}
+                  variantFilters={variantFilters}
+                  setVariantFilters={setVariantFilters}
                   sortOrder={sortOrder}
                   setSortOrder={setSortOrder}
                   selectedPokemon={selectedPokemon}

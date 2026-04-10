@@ -66,7 +66,7 @@ export async function exportChecklistToPDF(
   pdf.save(`${setName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_checklist.pdf`);
 }
 
-export async function exportPlaceholdersToPDF(
+export async function exportProxiesPDF(
   cards: PokemonCard[],
   setName: string,
   checkedCards: string[]
@@ -74,7 +74,7 @@ export async function exportPlaceholdersToPDF(
   const uncheckedCards = cards.filter(card => !checkedCards.includes(card.id));
   
   if (uncheckedCards.length === 0) {
-    throw new Error('No unchecked cards to generate placeholders for!');
+    throw new Error('No unchecked cards to generate proxies for!');
   }
 
   const pdf = new jsPDF('portrait', 'mm', 'a4');
@@ -119,11 +119,11 @@ export async function exportPlaceholdersToPDF(
     
     pdf.setFontSize(6);
     pdf.setTextColor(150, 150, 150);
-    pdf.text('PLACEHOLDER', x + cardWidth / 2, y + cardHeight / 2, { align: 'center' });
+    pdf.text('PROXY', x + cardWidth / 2, y + cardHeight / 2, { align: 'center' });
     pdf.setTextColor(0, 0, 0);
   }
 
-  pdf.save(`${setName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_placeholders.pdf`);
+  pdf.save(`${setName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_proxies.pdf`);
 }
 
 export function printChecklist() {

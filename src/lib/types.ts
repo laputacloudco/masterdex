@@ -4,6 +4,14 @@ export type SortOrder = 'set-order' | 'chronological' | 'grouped-by-set' | 'evol
 
 export type MasterSetType = 'official-set' | 'pokemon-collection' | 'evolution-chain';
 
+export interface VariantFilters {
+  normal: boolean;
+  holo: boolean;
+  reverseHolo: boolean;
+  promo: boolean;
+  tournament: boolean;
+}
+
 export interface PokemonCard {
   id: string;
   name: string;
@@ -40,7 +48,7 @@ export interface SavedSetlist {
   id: string;
   name: string;
   type: MasterSetType;
-  includeAllVariants: boolean;
+  variantFilters: VariantFilters;
   selectedSets: string[];
   selectedPokemon: string[];
   sortOrder: SortOrder;
