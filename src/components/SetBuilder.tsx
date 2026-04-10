@@ -1,47 +1,48 @@
-import { useState } from 'react';
 import type { MasterSetType, SortOrder } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sparkle } from '@phosphor-icons/react';
+import { CircleNotch } from '@phosphor-icons/react';
 import { PokemonSelector } from './PokemonSelector';
 import { SetSelector } from './SetSelector';
 
 interface SetBuilderProps {
-  onGenerate: (config: {
-    type: MasterSetType;
-    includeAllVariants: boolean;
-    selectedSets: string[];
-    selectedPokemon: string[];
-    sortOrder: SortOrder;
-  }) => void;
-  isGenerating?: boolean;
+  masterSetType: MasterSetType | undefined;
+  setMasterSetType: (value: MasterSetType) => void;
+  includeAllVariants: boolean | undefined;
+  setIncludeAllVariants: (value: boolean) => void;
+  sortOrder: SortOrder | undefined;
+  setSortOrder: (value: SortOrder) => void;
+  selectedPokemon: string[] | undefined;
+  setSelectedPokemon: (value: string[]) => void;
+  selectedSets: string[] | undefined;
+  setSelectedSets: (value: string[]) => void;
+  isLoading: boolean;
+  cardCount: number;
 }
 
-export function SetBuilder({ onGenerate, isGenerating }: SetBuilderProps) {
-  const [masterSetType, setMasterSetType] = useState<MasterSetType>('pokemon-collection');
-  const [includeAllVariants, setIncludeAllVariants] = useState(true);
-  const [sortOrder, setSortOrder] = useState<SortOrder>('chronological');
-  const [selectedPokemon, setSelectedPokemon] = useState<string[]>([]);
-  const [selectedSets, setSelectedSets] = useState<string[]>([]);
-
-  const handleGenerate = () => {
-    onGenerate({
-      type: masterSetType,
-      includeAllVariants,
-      selectedSets,
-      selectedPokemon,
-      sortOrder,
-    });
-  };
-
-  const canGenerate = 
-    (masterSetType === 'official-set' && selectedSets.length > 0) ||
-    ((masterSetType === 'pokemon-collection' || masterSetType === 'evolution-chain') && selectedPokemon.length > 0);
+export function SetBuilder({
+  masterSetType,
+  setMasterSetType,
+  includeAllVariants,
+  setIncludeAllVariants,
+  sortOrder,
+  setSortOrder,
+  selectedPokemon,
+  setSelectedPokemon,
+  selectedSets,
+  setSelectedSets,
+  isLoading,
+  cardCount,
+}: SetBuilderProps) {
+  const currentMasterSetType = masterSetType || 'pokemon-collection';
+  const currentIncludeAllVariants = includeAllVariants ?? true;
+  const currentSortOrder = sortOrder || 'chronological';
+  const currentSelectedPokemon = selectedPokemon || [];
+  const currentSelectedSets = selectedSets || [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -51,7 +52,7 @@ export function SetBuilder({ onGenerate, isGenerating }: SetBuilderProps) {
           <CardDescription>Choose what kind of collection you want to build</CardDescription>
         </CardHeader>
         <CardContent>
-          <RadioGroup value={masterSetType} onValueChange={(v) => setMasterSetType(v as MasterSetType)}>
+          <RadioGroup value={currentMasterSetType} onValueChange={(v) => setMasterSetType(v as MasterSetType)}>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="official-set" id="official-set" />
               <Label htmlFor="official-set" className="cursor-pointer">
@@ -90,40 +91,40 @@ export function SetBuilder({ onGenerate, isGenerating }: SetBuilderProps) {
           </div>
           <Switch
             id="variants-toggle"
-            checked={includeAllVariants}
+            checked={currentIncludeAllVariants}
             onCheckedChange={setIncludeAllVariants}
           />
         </CardContent>
       </Card>
 
-      {masterSetType === 'official-set' ? (
+      {currentMasterSetType === 'official-set' ? (
         <SetSelector 
-          selectedSets={selectedSets}
+          selectedSets={currentSelectedSets}
           onSelectSet={(setCode) => {
-            if (!selectedSets.includes(setCode)) {
-              setSelectedSets([...selectedSets, setCode]);
+            if (!currentSelectedSets.includes(setCode)) {
+              setSelectedSets([...currentSelectedSets, setCode]);
             }
           }}
           onRemoveSet={(setCode) => {
-            setSelectedSets(selectedSets.filter(s => s !== setCode));
+            setSelectedSets(currentSelectedSets.filter(s => s !== setCode));
           }}
         />
       ) : (
         <PokemonSelector
-          selectedPokemon={selectedPokemon}
+          selectedPokemon={currentSelectedPokemon}
           onSelectPokemon={(pokemon) => {
             if (Array.isArray(pokemon)) {
-              setSelectedPokemon([...selectedPokemon, ...pokemon]);
+              setSelectedPokemon([...currentSelectedPokemon, ...pokemon]);
             } else {
-              if (!selectedPokemon.includes(pokemon)) {
-                setSelectedPokemon([...selectedPokemon, pokemon]);
+              if (!currentSelectedPokemon.includes(pokemon)) {
+                setSelectedPokemon([...currentSelectedPokemon, pokemon]);
               }
             }
           }}
           onRemovePokemon={(pokemon) => {
-            setSelectedPokemon(selectedPokemon.filter(p => p !== pokemon));
+            setSelectedPokemon(currentSelectedPokemon.filter(p => p !== pokemon));
           }}
-          showEvolutionChain={masterSetType === 'evolution-chain'}
+          showEvolutionChain={currentMasterSetType === 'evolution-chain'}
         />
       )}
 
@@ -133,17 +134,17 @@ export function SetBuilder({ onGenerate, isGenerating }: SetBuilderProps) {
           <CardDescription>How should cards be organized in your checklist</CardDescription>
         </CardHeader>
         <CardContent>
-          <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as SortOrder)}>
+          <Select value={currentSortOrder} onValueChange={(v) => setSortOrder(v as SortOrder)}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {masterSetType === 'official-set' && (
+              {currentMasterSetType === 'official-set' && (
                 <SelectItem value="set-order">Set Order (Card Number)</SelectItem>
               )}
               <SelectItem value="chronological">Chronological (Release Date)</SelectItem>
               <SelectItem value="grouped-by-set">Grouped by Set</SelectItem>
-              {masterSetType === 'evolution-chain' && (
+              {currentMasterSetType === 'evolution-chain' && (
                 <SelectItem value="evolution-chain">Evolution Chain Order</SelectItem>
               )}
             </SelectContent>
@@ -151,15 +152,31 @@ export function SetBuilder({ onGenerate, isGenerating }: SetBuilderProps) {
         </CardContent>
       </Card>
 
-      <Button 
-        onClick={handleGenerate} 
-        disabled={!canGenerate || isGenerating}
-        size="lg"
-        className="bg-accent text-accent-foreground hover:bg-accent/90"
-      >
-        <Sparkle className="mr-2" weight="fill" />
-        {isGenerating ? 'Generating...' : 'Generate Master Set Checklist'}
-      </Button>
+      {isLoading && (
+        <Card className="bg-accent/10 border-accent/30">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-center gap-3 text-accent-foreground">
+              <CircleNotch className="animate-spin" size={24} />
+              <span className="text-sm font-medium">Loading cards...</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {!isLoading && cardCount > 0 && (
+        <Card className="bg-primary/10 border-primary/30">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-center gap-2">
+              <Badge variant="secondary" className="text-base px-4 py-2">
+                {cardCount} cards loaded
+              </Badge>
+              <span className="text-sm text-muted-foreground">
+                Switch to Checklist tab to view
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

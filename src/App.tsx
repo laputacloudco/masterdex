@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useKV } from '@github/spark/hooks';
 import type { PokemonCard, MasterSetType, SortOrder } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SetBuilder } from '@/components/SetBuilder';
@@ -8,66 +9,76 @@ import { sortCards } from '@/lib/cardUtils';
 import { toast } from 'sonner';
 
 function App() {
-  const [generatedCards, setGeneratedCards] = useState<PokemonCard[] | null>(null);
-  const [checklistName, setChecklistName] = useState<string>('');
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [masterSetType, setMasterSetType] = useKV<MasterSetType>('config-type', 'pokemon-collection');
+  const [includeAllVariants, setIncludeAllVariants] = useKV<boolean>('config-variants', true);
+  const [sortOrder, setSortOrder] = useKV<SortOrder>('config-sort', 'chronological');
+  const [selectedPokemon, setSelectedPokemon] = useKV<string[]>('config-pokemon', []);
+  const [selectedSets, setSelectedSets] = useKV<string[]>('config-sets', []);
+  
+  const [cards, setCards] = useState<PokemonCard[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('builder');
 
-  const handleGenerate = async (config: {
-    type: MasterSetType;
-    includeAllVariants: boolean;
-    selectedSets: string[];
-    selectedPokemon: string[];
-    sortOrder: SortOrder;
-  }) => {
-    setIsGenerating(true);
-    
-    try {
-      let cards: PokemonCard[] = [];
+  useEffect(() => {
+    const fetchCards = async () => {
+      const hasSelection = 
+        (masterSetType === 'official-set' && selectedSets && selectedSets.length > 0) ||
+        ((masterSetType === 'pokemon-collection' || masterSetType === 'evolution-chain') && 
+         selectedPokemon && selectedPokemon.length > 0);
 
-      if (config.type === 'official-set') {
-        const promises = config.selectedSets.map(setCode => fetchCardsForSet(setCode));
-        const results = await Promise.all(promises);
-        cards = results.flat();
-        
-        setChecklistName(
-          config.selectedSets.length === 1 
-            ? config.selectedSets[0]
-            : `${config.selectedSets.length} Sets`
-        );
-      } else {
-        const promises = config.selectedPokemon.map(pokemon => fetchCardsForPokemon(pokemon));
-        const results = await Promise.all(promises);
-        cards = results.flat();
-        
-        setChecklistName(
-          config.selectedPokemon.length === 1
-            ? config.selectedPokemon[0]
-            : `${config.selectedPokemon.length} Pokemon`
-        );
+      if (!hasSelection) {
+        setCards([]);
+        return;
       }
 
-      if (!config.includeAllVariants) {
-        const uniqueArtCards = new Map<string, PokemonCard>();
-        cards.forEach(card => {
-          const key = `${card.pokemonName}-${card.setCode}-${card.setNumber.split(' ')[0]}`;
-          if (!uniqueArtCards.has(key) || card.variant === 'normal') {
-            uniqueArtCards.set(key, card);
-          }
-        });
-        cards = Array.from(uniqueArtCards.values());
-      }
-
-      const sorted = sortCards(cards, config.sortOrder, config.selectedPokemon);
+      setIsLoading(true);
       
-      setGeneratedCards(sorted);
-      toast.success(`Generated checklist with ${sorted.length} cards!`);
-    } catch (error) {
-      console.error('Error generating checklist:', error);
-      toast.error('Failed to generate checklist. Please try again.');
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+      try {
+        let fetchedCards: PokemonCard[] = [];
+
+        if (masterSetType === 'official-set' && selectedSets) {
+          const promises = selectedSets.map(setCode => fetchCardsForSet(setCode));
+          const results = await Promise.all(promises);
+          fetchedCards = results.flat();
+        } else if (selectedPokemon) {
+          const promises = selectedPokemon.map(pokemon => fetchCardsForPokemon(pokemon));
+          const results = await Promise.all(promises);
+          fetchedCards = results.flat();
+        }
+
+        if (!includeAllVariants) {
+          const uniqueArtCards = new Map<string, PokemonCard>();
+          fetchedCards.forEach(card => {
+            const key = `${card.pokemonName}-${card.setCode}-${card.setNumber.split(' ')[0]}`;
+            if (!uniqueArtCards.has(key) || card.variant === 'normal') {
+              uniqueArtCards.set(key, card);
+            }
+          });
+          fetchedCards = Array.from(uniqueArtCards.values());
+        }
+
+        const sorted = sortCards(fetchedCards, sortOrder || 'chronological', selectedPokemon || []);
+        setCards(sorted);
+      } catch (error) {
+        console.error('Error fetching cards:', error);
+        toast.error('Failed to load cards. Please try again.');
+        setCards([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCards();
+  }, [masterSetType, includeAllVariants, sortOrder, selectedPokemon, selectedSets]);
+
+  const checklistName = 
+    masterSetType === 'official-set' && selectedSets
+      ? (selectedSets.length === 1 ? selectedSets[0] : `${selectedSets.length} Sets`)
+      : selectedPokemon
+      ? (selectedPokemon.length === 1 ? selectedPokemon[0] : `${selectedPokemon.length} Pokemon`)
+      : 'Checklist';
+
+  const canViewChecklist = cards.length > 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
@@ -81,24 +92,37 @@ function App() {
           </p>
         </header>
 
-        <Tabs defaultValue="builder" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
             <TabsTrigger value="builder">Build Set</TabsTrigger>
-            <TabsTrigger value="checklist" disabled={!generatedCards}>
-              Checklist {generatedCards && `(${generatedCards.length})`}
+            <TabsTrigger value="checklist" disabled={!canViewChecklist}>
+              Checklist {canViewChecklist && `(${cards.length})`}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="builder" className="mt-8">
             <div className="max-w-3xl mx-auto">
-              <SetBuilder onGenerate={handleGenerate} isGenerating={isGenerating} />
+              <SetBuilder
+                masterSetType={masterSetType}
+                setMasterSetType={setMasterSetType}
+                includeAllVariants={includeAllVariants}
+                setIncludeAllVariants={setIncludeAllVariants}
+                sortOrder={sortOrder}
+                setSortOrder={setSortOrder}
+                selectedPokemon={selectedPokemon}
+                setSelectedPokemon={setSelectedPokemon}
+                selectedSets={selectedSets}
+                setSelectedSets={setSelectedSets}
+                isLoading={isLoading}
+                cardCount={cards.length}
+              />
             </div>
           </TabsContent>
 
           <TabsContent value="checklist" className="mt-8">
-            {generatedCards && (
+            {canViewChecklist && (
               <div className="max-w-4xl mx-auto">
-                <Checklist cards={generatedCards} setName={checklistName} />
+                <Checklist cards={cards} setName={checklistName} />
               </div>
             )}
           </TabsContent>
