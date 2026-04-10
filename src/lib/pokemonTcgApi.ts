@@ -1,4 +1,5 @@
 import type { PokemonCard, PokemonSet, CardVariant } from './types';
+import { getCameoCardsForPokemon, type CameoEntry } from './cameoData';
 
 const API_BASE_URL = 'https://api.pokemontcg.io/v2';
 
@@ -165,7 +166,7 @@ export async function fetchCardsForSet(setId: string): Promise<PokemonCard[]> {
   }
 }
 
-export async function fetchCardsForPokemon(pokemonName: string): Promise<PokemonCard[]> {
+export async function fetchCardsForPokemon(pokemonName: string, includeCameos: boolean = false): Promise<PokemonCard[]> {
   try {
     let allCards: TCGCard[] = [];
     let page = 1;
@@ -187,16 +188,44 @@ export async function fetchCardsForPokemon(pokemonName: string): Promise<Pokemon
       if (page > 10) break;
     }
     
-    return allCards
+    const regularCards = allCards
       .filter(card => {
         const cardPokemonName = card.name.split(' ')[0].toLowerCase();
         return cardPokemonName === pokemonName.toLowerCase();
       })
       .map(mapTCGCardToCard);
+    
+    if (includeCameos) {
+      const cameoEntries = getCameoCardsForPokemon(pokemonName);
+      const cameoCards = await fetchCameoCards(cameoEntries);
+      return [...regularCards, ...cameoCards];
+    }
+    
+    return regularCards;
   } catch (error) {
     console.error('Error fetching cards for pokemon:', error);
     throw error;
   }
+}
+
+async function fetchCameoCards(cameoEntries: CameoEntry[]): Promise<PokemonCard[]> {
+  const cameoCards: PokemonCard[] = [];
+  
+  for (const entry of cameoEntries) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/cards/${entry.cardId}`);
+      if (response.ok) {
+        const data = await response.json();
+        const card = mapTCGCardToCard(data.data);
+        card.variant = 'cameo';
+        cameoCards.push(card);
+      }
+    } catch (error) {
+      console.warn(`Failed to fetch cameo card ${entry.cardId}:`, error);
+    }
+  }
+  
+  return cameoCards;
 }
 
 export async function searchPokemon(query: string): Promise<string[]> {

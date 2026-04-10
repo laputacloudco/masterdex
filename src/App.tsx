@@ -6,6 +6,7 @@ import { SetBuilder } from '@/components/SetBuilder';
 import { Checklist } from '@/components/Checklist';
 import { SavedSetlists } from '@/components/SavedSetlists';
 import { VariantStatistics } from '@/components/VariantStatistics';
+import { CameoBrowser } from '@/components/CameoBrowser';
 import { fetchCardsForSet, fetchCardsForPokemon } from '@/lib/pokemonTcgApi';
 import { sortCards } from '@/lib/cardUtils';
 import { toast } from 'sonner';
@@ -51,18 +52,18 @@ function App() {
       
       try {
         let fetchedCards: PokemonCard[] = [];
+        const currentVariantFilters = variantFilters || DEFAULT_VARIANT_FILTERS;
 
         if (masterSetType === 'official-set' && selectedSets) {
           const promises = selectedSets.map(setCode => fetchCardsForSet(setCode));
           const results = await Promise.all(promises);
           fetchedCards = results.flat();
         } else if (selectedPokemon) {
-          const promises = selectedPokemon.map(pokemon => fetchCardsForPokemon(pokemon));
+          const includeCameos = currentVariantFilters.cameo;
+          const promises = selectedPokemon.map(pokemon => fetchCardsForPokemon(pokemon, includeCameos));
           const results = await Promise.all(promises);
           fetchedCards = results.flat();
         }
-
-        const currentVariantFilters = variantFilters || DEFAULT_VARIANT_FILTERS;
         
         const filteredCards = fetchedCards.filter(card => {
           if (card.variant === 'normal' && card.isHolo) {
@@ -142,11 +143,12 @@ function App() {
         </header>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
+          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-3">
             <TabsTrigger value="builder">Build Set</TabsTrigger>
             <TabsTrigger value="checklist" disabled={!canViewChecklist}>
               Checklist {canViewChecklist && `(${cards.length})`}
             </TabsTrigger>
+            <TabsTrigger value="cameos">Cameo Database</TabsTrigger>
           </TabsList>
 
           <TabsContent value="builder" className="mt-8">
@@ -189,6 +191,12 @@ function App() {
                 <Checklist cards={cards} setName={checklistName} />
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="cameos" className="mt-8">
+            <div className="max-w-5xl mx-auto">
+              <CameoBrowser />
+            </div>
           </TabsContent>
         </Tabs>
       </div>
