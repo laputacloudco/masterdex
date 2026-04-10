@@ -49,11 +49,35 @@ export interface TCGSet {
 function mapVariant(card: TCGCard): CardVariant {
   const name = card.name.toLowerCase();
   const rarity = card.rarity?.toLowerCase() || '';
+  const subtypes = card.subtypes?.map(s => s.toLowerCase()) || [];
   
-  if (name.includes('promo') || rarity.includes('promo')) return 'promo';
-  if (name.includes('tournament') || rarity.includes('tournament')) return 'tournament';
-  if (rarity.includes('reverse')) return 'reverse-holo';
-  if (rarity.includes('holo') || rarity.includes('rainbow') || rarity.includes('secret')) return 'holo';
+  if (name.includes('mcdonald') || name.includes('gamestop') || subtypes.includes('special')) {
+    return 'collab';
+  }
+  if (name.includes('promo') || rarity.includes('promo') || card.set.series.toLowerCase().includes('promo')) {
+    return 'promo';
+  }
+  if (name.includes('tournament') || rarity.includes('tournament')) {
+    return 'tournament';
+  }
+  if (rarity.includes('rainbow') || rarity.includes('hyper rare')) {
+    return 'rainbow-rare';
+  }
+  if (rarity.includes('secret') || parseInt(card.number) > (card.set.printedTotal || card.set.total)) {
+    return 'secret-rare';
+  }
+  if (rarity.includes('ultra rare') || rarity.includes('full art')) {
+    return 'full-art';
+  }
+  if (rarity.includes('gold') || rarity.includes('golden')) {
+    return 'gold';
+  }
+  if (rarity.includes('reverse')) {
+    return 'reverse-holo';
+  }
+  if (rarity.includes('holo')) {
+    return 'holo';
+  }
   
   return 'normal';
 }

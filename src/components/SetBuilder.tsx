@@ -28,7 +28,12 @@ const DEFAULT_VARIANT_FILTERS: VariantFilters = {
   normal: true,
   holo: true,
   reverseHolo: true,
+  fullArt: true,
+  secretRare: true,
+  rainbowRare: true,
+  gold: true,
   promo: true,
+  collab: true,
   tournament: true,
 };
 
@@ -96,56 +101,190 @@ export function SetBuilder({
           <CardDescription>Select which card variants to include in your checklist</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="variant-normal"
-                checked={currentVariantFilters.normal}
-                onCheckedChange={() => handleVariantToggle('normal')}
-              />
-              <Label htmlFor="variant-normal" className="cursor-pointer">
-                Normal Cards
-              </Label>
+          <div className="space-y-6">
+            <div>
+              <h4 className="text-sm font-medium mb-3 text-foreground">Standard Variants</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="flex items-start space-x-3 p-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors">
+                  <Checkbox
+                    id="variant-normal"
+                    checked={currentVariantFilters.normal}
+                    onCheckedChange={() => handleVariantToggle('normal')}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor="variant-normal" className="cursor-pointer font-medium">
+                      Normal Cards
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Standard non-holo cards
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-3 p-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors">
+                  <Checkbox
+                    id="variant-holo"
+                    checked={currentVariantFilters.holo}
+                    onCheckedChange={() => handleVariantToggle('holo')}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor="variant-holo" className="cursor-pointer font-medium">
+                      Holo & Special Finishes
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Standard holographic variants
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-3 p-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors">
+                  <Checkbox
+                    id="variant-reverse-holo"
+                    checked={currentVariantFilters.reverseHolo}
+                    onCheckedChange={() => handleVariantToggle('reverseHolo')}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor="variant-reverse-holo" className="cursor-pointer font-medium">
+                      Reverse Holo
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Cards with holographic backgrounds
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="variant-holo"
-                checked={currentVariantFilters.holo}
-                onCheckedChange={() => handleVariantToggle('holo')}
-              />
-              <Label htmlFor="variant-holo" className="cursor-pointer">
-                Holo & Special Finishes
-              </Label>
+
+            <div>
+              <h4 className="text-sm font-medium mb-3 text-foreground">Ultra Rare Variants</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="flex items-start space-x-3 p-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors">
+                  <Checkbox
+                    id="variant-full-art"
+                    checked={currentVariantFilters.fullArt}
+                    onCheckedChange={() => handleVariantToggle('fullArt')}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor="variant-full-art" className="cursor-pointer font-medium">
+                      Full Art
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Ultra rare full-art illustrations
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-3 p-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors">
+                  <Checkbox
+                    id="variant-secret-rare"
+                    checked={currentVariantFilters.secretRare}
+                    onCheckedChange={() => handleVariantToggle('secretRare')}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor="variant-secret-rare" className="cursor-pointer font-medium">
+                      Secret Rare
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Secret rare cards beyond set number
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-3 p-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors">
+                  <Checkbox
+                    id="variant-rainbow-rare"
+                    checked={currentVariantFilters.rainbowRare}
+                    onCheckedChange={() => handleVariantToggle('rainbowRare')}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor="variant-rainbow-rare" className="cursor-pointer font-medium">
+                      Rainbow Rare
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Hyper rare rainbow holographic cards
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-3 p-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors">
+                  <Checkbox
+                    id="variant-gold"
+                    checked={currentVariantFilters.gold}
+                    onCheckedChange={() => handleVariantToggle('gold')}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor="variant-gold" className="cursor-pointer font-medium">
+                      Gold Cards
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Gold & golden secret rares
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="variant-reverse-holo"
-                checked={currentVariantFilters.reverseHolo}
-                onCheckedChange={() => handleVariantToggle('reverseHolo')}
-              />
-              <Label htmlFor="variant-reverse-holo" className="cursor-pointer">
-                Reverse Holo
-              </Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="variant-promo"
-                checked={currentVariantFilters.promo}
-                onCheckedChange={() => handleVariantToggle('promo')}
-              />
-              <Label htmlFor="variant-promo" className="cursor-pointer">
-                Promos & Collaborations
-              </Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="variant-tournament"
-                checked={currentVariantFilters.tournament}
-                onCheckedChange={() => handleVariantToggle('tournament')}
-              />
-              <Label htmlFor="variant-tournament" className="cursor-pointer">
-                Tournament Prizes
-              </Label>
+
+            <div>
+              <h4 className="text-sm font-medium mb-3 text-foreground">Special Releases</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="flex items-start space-x-3 p-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors">
+                  <Checkbox
+                    id="variant-promo"
+                    checked={currentVariantFilters.promo}
+                    onCheckedChange={() => handleVariantToggle('promo')}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor="variant-promo" className="cursor-pointer font-medium">
+                      Promo Cards
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Official promo releases & giveaways
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-3 p-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors">
+                  <Checkbox
+                    id="variant-collab"
+                    checked={currentVariantFilters.collab}
+                    onCheckedChange={() => handleVariantToggle('collab')}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor="variant-collab" className="cursor-pointer font-medium">
+                      Collaborations
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      McDonald's, GameStop & other collabs
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-3 p-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors">
+                  <Checkbox
+                    id="variant-tournament"
+                    checked={currentVariantFilters.tournament}
+                    onCheckedChange={() => handleVariantToggle('tournament')}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor="variant-tournament" className="cursor-pointer font-medium">
+                      Tournament Prizes
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Official tournament prize cards
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </CardContent>

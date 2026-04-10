@@ -13,7 +13,12 @@ const DEFAULT_VARIANT_FILTERS: VariantFilters = {
   normal: true,
   holo: true,
   reverseHolo: true,
+  fullArt: true,
+  secretRare: true,
+  rainbowRare: true,
+  gold: true,
   promo: true,
+  collab: true,
   tournament: true,
 };
 
@@ -69,8 +74,18 @@ function App() {
               return currentVariantFilters.holo;
             case 'reverse-holo':
               return currentVariantFilters.reverseHolo;
+            case 'full-art':
+              return currentVariantFilters.fullArt;
+            case 'secret-rare':
+              return currentVariantFilters.secretRare;
+            case 'rainbow-rare':
+              return currentVariantFilters.rainbowRare;
+            case 'gold':
+              return currentVariantFilters.gold;
             case 'promo':
               return currentVariantFilters.promo;
+            case 'collab':
+              return currentVariantFilters.collab;
             case 'tournament':
               return currentVariantFilters.tournament;
             default:
