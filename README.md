@@ -1,4 +1,4 @@
-# MasterDex
+# Pokomplete
 
 A comprehensive Pokemon Trading Card Game master set planner. Build checklists for complete collections - by official set, by Pokemon, or by evolution chain - with full variant tracking.
 
@@ -22,11 +22,7 @@ npm run dev
 ## Build
 
 ```bash
-# Standalone build
 npm run build
-
-# GitHub Pages build (sets base path)
-npm run build:gh-pages
 ```
 
 ## Checks

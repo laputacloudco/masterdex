@@ -1,6 +1,6 @@
 import { useEffect, useCallback, useRef, useSyncExternalStore, useMemo } from 'react';
 
-const STORAGE_PREFIX = 'masterdex:';
+const STORAGE_PREFIX = 'pokomplete:';
 
 type Listener = () => void;
 

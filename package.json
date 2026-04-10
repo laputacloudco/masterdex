@@ -1,12 +1,11 @@
 {
-    "name": "masterdex",
+    "name": "pokomplete",
     "private": true,
     "version": "0.0.0",
     "type": "module",
     "scripts": {
         "dev": "vite",
         "build": "tsc -b --noCheck && vite build",
-        "build:gh-pages": "VITE_BASE_PATH=/masterdex/ tsc -b --noCheck && VITE_BASE_PATH=/masterdex/ vite build",
         "lint": "eslint .",
         "typecheck": "tsc -b",
         "preview": "vite preview"
