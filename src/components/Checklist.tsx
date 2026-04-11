@@ -52,6 +52,21 @@ export function Checklist({ cards, setName }: ChecklistProps) {
     }
   };
 
+  const handleExportMissingProxies = async () => {
+    const missingCards = cards.filter(card => !isChecked(card.id));
+    if (missingCards.length === 0) {
+      toast.info('No missing cards — your collection is complete!');
+      return;
+    }
+    try {
+      await exportPlaceholdersToPDF(missingCards, `${setName}_missing`);
+      toast.success(`Exported ${missingCards.length} missing card proxies to PDF!`);
+    } catch (error) {
+      console.error('Failed to export placeholders:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to export placeholders');
+    }
+  };
+
   const handlePrint = () => {
     printChecklist();
   };
@@ -103,7 +118,11 @@ export function Checklist({ cards, setName }: ChecklistProps) {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleExportProxies}>
                   <Cards className="mr-2" />
-                  Export Proxies PDF
+                  Export All Proxies PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportMissingProxies}>
+                  <Cards className="mr-2" />
+                  Export Missing Cards Proxies
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
