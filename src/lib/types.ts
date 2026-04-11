@@ -18,6 +18,8 @@ export interface VariantFilters {
   cameo: boolean;
 }
 
+export type CardCondition = 'near-mint' | 'lightly-played' | 'moderately-played';
+
 export interface PokemonCard {
   id: string;
   name: string;
@@ -33,6 +35,12 @@ export interface PokemonCard {
   imageUrl?: string;
   largeImageUrl?: string;
   marketPrice?: number;
+  prices?: {
+    low?: number;
+    mid?: number;
+    market?: number;
+    high?: number;
+  };
   tcgPlayerUrl?: string;
 }
 
