@@ -51,7 +51,7 @@ export function VariantStatistics({ cards }: VariantStatisticsProps) {
       <Card className="border-accent/30">
         <CardHeader>
           <CollapsibleTrigger asChild>
-            <button type="button" aria-expanded={open} className="flex items-center justify-between w-full text-left gap-2 cursor-pointer">
+            <button type="button" className="flex items-center justify-between w-full text-left gap-2 cursor-pointer">
               <CardTitle className="flex items-center gap-2">
                 <Medal weight="fill" className="text-accent" size={24} />
                 Variant Statistics
