@@ -204,9 +204,10 @@ export function getEvolutionChain(pokemonName: string): string[] {
   const chain: string[] = [];
   const visited = new Set<string>();
   const queue = [root];
+  let queueIdx = 0;
   
-  while (queue.length > 0) {
-    const current = queue.shift()!;
+  while (queueIdx < queue.length) {
+    const current = queue[queueIdx++];
     const key = current.name.toLowerCase();
     if (visited.has(key)) continue;
     visited.add(key);
