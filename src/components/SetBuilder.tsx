@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import type { MasterSetType, SortOrder, VariantFilters } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';

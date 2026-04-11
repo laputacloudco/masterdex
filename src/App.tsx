@@ -7,6 +7,7 @@ import { Checklist } from '@/components/Checklist';
 import { SavedSetlists } from '@/components/SavedSetlists';
 import { VariantStatistics } from '@/components/VariantStatistics';
 import { CameoBrowser } from '@/components/CameoBrowser';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { fetchCardsForSet, fetchCardsForPokemon, deduplicateCards } from '@/lib/pokemonTcgApi';
 import { sortCards, sortByEvolutionChainAsync } from '@/lib/cardUtils';
 import { toast } from 'sonner';
