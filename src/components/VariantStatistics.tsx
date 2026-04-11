@@ -1,16 +1,20 @@
+import { useState } from 'react';
 import type { PokemonCard } from '@/lib/types';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Sparkle, Star, Lightning, Trophy, Gift, Handshake, Medal } from '@phosphor-icons/react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Sparkle, Star, Lightning, Trophy, Gift, Handshake, Medal, CaretDown } from '@phosphor-icons/react';
 
 interface VariantStatisticsProps {
   cards: PokemonCard[];
 }
 
 export function VariantStatistics({ cards }: VariantStatisticsProps) {
+  const [open, setOpen] = useState(false);
+
   const stats = {
     normal: cards.filter(c => c.variant === 'normal' && !c.isHolo).length,
-    holo: cards.filter(c => c.variant === 'normal' && c.isHolo || c.variant === 'holo').length,
+    holo: cards.filter(c => (c.variant === 'normal' && c.isHolo) || c.variant === 'holo').length,
     reverseHolo: cards.filter(c => c.variant === 'reverse-holo').length,
     fullArt: cards.filter(c => c.variant === 'full-art').length,
     secretRare: cards.filter(c => c.variant === 'secret-rare').length,
@@ -43,51 +47,54 @@ export function VariantStatistics({ cards }: VariantStatisticsProps) {
   }
 
   return (
-    <Card className="border-accent/30">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Medal weight="fill" className="text-accent" size={24} />
-          Variant Statistics
-        </CardTitle>
-        <CardDescription>Breakdown of card variants in your checklist</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-primary/10 rounded-lg border border-primary/30">
-            <span className="font-semibold text-lg">Total Cards</span>
-            <Badge variant="default" className="text-lg px-4 py-2">
-              {total}
-            </Badge>
-          </div>
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <Card className="border-accent/30">
+        <CardHeader>
+          <CollapsibleTrigger asChild>
+            <button type="button" className="flex items-center justify-between w-full text-left gap-2 cursor-pointer">
+              <CardTitle className="flex items-center gap-2">
+                <Medal weight="fill" className="text-accent" size={24} />
+                Variant Statistics
+                <Badge variant="outline" className="font-mono ml-1" aria-label={`Total cards: ${total}`}>{total}</Badge>
+              </CardTitle>
+              <CaretDown
+                size={18}
+                className={`text-muted-foreground shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+              />
+            </button>
+          </CollapsibleTrigger>
+        </CardHeader>
+        <CollapsibleContent>
+          <div className="px-6 pb-6 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {visibleStats.map((variant) => {
+                const Icon = variant.icon;
+                const percentage = ((variant.count / total) * 100).toFixed(1);
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {visibleStats.map((variant) => {
-              const Icon = variant.icon;
-              const percentage = ((variant.count / total) * 100).toFixed(1);
-              
-              return (
-                <div
-                  key={variant.key}
-                  className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded flex items-center justify-center ${variant.color} text-white`}>
-                      {Icon ? <Icon size={16} weight="bold" /> : <span className="text-xs font-bold">N</span>}
+                return (
+                  <div
+                    key={variant.key}
+                    className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded flex items-center justify-center ${variant.color} text-white`}>
+                        {Icon ? <Icon size={16} weight="bold" /> : <span className="text-xs font-bold">N</span>}
+                      </div>
+                      <div>
+                        <div className="font-medium text-sm">{variant.label}</div>
+                        <div className="text-xs text-muted-foreground">{percentage}%</div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-medium text-sm">{variant.label}</div>
-                      <div className="text-xs text-muted-foreground">{percentage}%</div>
-                    </div>
+                    <Badge variant="secondary" className="font-mono">
+                      {variant.count}
+                    </Badge>
                   </div>
-                  <Badge variant="secondary" className="font-mono">
-                    {variant.count}
-                  </Badge>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
   );
 }
