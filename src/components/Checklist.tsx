@@ -32,9 +32,9 @@ function sortChecklist(cards: PokemonCard[], order: ChecklistSortOrder): Pokemon
     case 'price-low-high':
       return sorted.sort((a, b) => (a.marketPrice || 0) - (b.marketPrice || 0));
     case 'name-a-z':
-      return sorted.sort((a, b) => a.pokemonName.localeCompare(b.pokemonName));
+      return sorted.sort((a, b) => a.pokemonName.localeCompare(b.pokemonName, undefined, { sensitivity: 'base' }));
     case 'name-z-a':
-      return sorted.sort((a, b) => b.pokemonName.localeCompare(a.pokemonName));
+      return sorted.sort((a, b) => b.pokemonName.localeCompare(a.pokemonName, undefined, { sensitivity: 'base' }));
     default:
       return sorted;
   }
