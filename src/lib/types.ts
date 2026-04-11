@@ -1,6 +1,6 @@
 export type CardVariant = 'normal' | 'reverse-holo' | 'holo' | 'full-art' | 'secret-rare' | 'rainbow-rare' | 'gold' | 'promo' | 'collab' | 'tournament' | 'cameo';
 
-export type SortOrder = 'set-order' | 'chronological' | 'grouped-by-set' | 'evolution-chain';
+export type SortOrder = 'set-order' | 'chronological' | 'grouped-by-set' | 'grouped-by-pokemon' | 'evolution-chain';
 
 export type MasterSetType = 'official-set' | 'pokemon-collection';
 

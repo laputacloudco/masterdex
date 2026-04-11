@@ -9,7 +9,7 @@ import { VariantStatistics } from '@/components/VariantStatistics';
 import { CameoBrowser } from '@/components/CameoBrowser';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { fetchCardsForSet, fetchCardsForPokemon, deduplicateCards } from '@/lib/pokemonTcgApi';
-import { sortCards, sortByEvolutionChainAsync } from '@/lib/cardUtils';
+import { sortCards, sortByEvolutionChainAsync, sortGroupedByPokemonAsync } from '@/lib/cardUtils';
 import { toast } from 'sonner';
 
 const DEFAULT_VARIANT_FILTERS: VariantFilters = {
@@ -99,10 +99,13 @@ function App() {
         });
 
         let sorted: PokemonCard[];
-        if ((sortOrder || 'chronological') === 'evolution-chain') {
+        const currentSort = sortOrder || 'chronological';
+        if (currentSort === 'evolution-chain') {
           sorted = await sortByEvolutionChainAsync(filteredCards, selectedPokemon || []);
+        } else if (currentSort === 'grouped-by-pokemon') {
+          sorted = await sortGroupedByPokemonAsync(filteredCards, selectedPokemon || []);
         } else {
-          sorted = sortCards(filteredCards, sortOrder || 'chronological');
+          sorted = sortCards(filteredCards, currentSort);
         }
         setCards(sorted);
       } catch (error) {

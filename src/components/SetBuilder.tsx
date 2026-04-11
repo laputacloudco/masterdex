@@ -486,6 +486,9 @@ export function SetBuilder({
               <SelectItem value="chronological">Chronological (Release Date)</SelectItem>
               <SelectItem value="grouped-by-set">Grouped by Set</SelectItem>
               {currentMasterSetType === 'pokemon-collection' && (
+                <SelectItem value="grouped-by-pokemon">Grouped by Pokemon</SelectItem>
+              )}
+              {currentMasterSetType === 'pokemon-collection' && (
                 <SelectItem value="evolution-chain">Evolution Chain Order</SelectItem>
               )}
             </SelectContent>
