@@ -6,6 +6,7 @@ import { SetBuilder } from '@/components/SetBuilder';
 import { Checklist } from '@/components/Checklist';
 import { SavedSetlists } from '@/components/SavedSetlists';
 import { VariantStatistics } from '@/components/VariantStatistics';
+import { BinderCalculator } from '@/components/BinderCalculator';
 import { CameoBrowser } from '@/components/CameoBrowser';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { fetchCardsForSet, fetchCardsForPokemon, deduplicateCards } from '@/lib/pokemonTcgApi';
@@ -203,6 +204,7 @@ function App() {
             {canViewChecklist && (
               <div className="max-w-4xl mx-auto space-y-6">
                 <VariantStatistics cards={cards} />
+                <BinderCalculator cardCount={cards.length} />
                 <Checklist cards={cards} setName={checklistName} />
               </div>
             )}
