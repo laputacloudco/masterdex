@@ -59,7 +59,6 @@ export interface SavedSetlist {
   selectedPokemon: string[];
   sortOrder: SortOrder;
   cardCount: number;
-  includeEvolutionChain?: boolean;
   createdAt: string;
   updatedAt: string;
 }

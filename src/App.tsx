@@ -32,7 +32,6 @@ function App() {
   const [sortOrder, setSortOrder] = useKV<SortOrder>('config-sort', 'chronological');
   const [selectedPokemon, setSelectedPokemon] = useKV<string[]>('config-pokemon', []);
   const [selectedSets, setSelectedSets] = useKV<string[]>('config-sets', []);
-  const [includeEvolutionChain, setIncludeEvolutionChain] = useKV<boolean>('config-evolution-chain', false);
   
   const [cards, setCards] = useState<PokemonCard[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -119,7 +118,6 @@ function App() {
     setSortOrder(setlist.sortOrder);
     setSelectedPokemon(setlist.selectedPokemon);
     setSelectedSets(setlist.selectedSets);
-    setIncludeEvolutionChain(setlist.includeEvolutionChain || false);
     setActiveTab('builder');
   };
 
@@ -169,7 +167,6 @@ function App() {
                     selectedSets,
                     selectedPokemon,
                     sortOrder,
-                    includeEvolutionChain,
                     cardCount: cards.length,
                   }}
                   onLoad={handleLoadSetlist}
@@ -186,8 +183,6 @@ function App() {
                   setSelectedPokemon={setSelectedPokemon}
                   selectedSets={selectedSets}
                   setSelectedSets={setSelectedSets}
-                  includeEvolutionChain={includeEvolutionChain}
-                  setIncludeEvolutionChain={setIncludeEvolutionChain}
                   isLoading={isLoading}
                   cardCount={cards.length}
                 />

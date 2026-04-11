@@ -17,7 +17,6 @@ interface SavedSetlistsProps {
     selectedSets: string[] | undefined;
     selectedPokemon: string[] | undefined;
     sortOrder: SortOrder | undefined;
-    includeEvolutionChain: boolean | undefined;
     cardCount: number;
   };
   onLoad: (setlist: SavedSetlist) => void;
@@ -59,7 +58,6 @@ export function SavedSetlists({ currentConfig, onLoad }: SavedSetlistsProps) {
       selectedSets: currentConfig.selectedSets || [],
       selectedPokemon: currentConfig.selectedPokemon || [],
       sortOrder: currentConfig.sortOrder || 'chronological',
-      includeEvolutionChain: currentConfig.includeEvolutionChain || false,
       cardCount: currentConfig.cardCount,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),

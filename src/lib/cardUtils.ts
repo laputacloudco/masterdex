@@ -52,17 +52,31 @@ export function sortCards(cards: PokemonCard[], sortOrder: SortOrder, selectedPo
 }
 
 function sortByEvolutionChain(cards: PokemonCard[], selectedPokemon: string[]): PokemonCard[] {
-  const chains = new Map<string, string[]>();
-  const allPokemonInChain = new Set<string>();
+  // Build unique chains from all selected Pokemon
+  const seenRoots = new Set<string>();
+  const uniqueChains: string[][] = [];
   
   selectedPokemon.forEach(pokemon => {
     const chain = getEvolutionChain(pokemon);
-    chain.forEach(p => {
-      chains.set(p.toLowerCase(), chain);
-      allPokemonInChain.add(p.toLowerCase());
+    const rootKey = chain[0]?.toLowerCase();
+    if (rootKey && !seenRoots.has(rootKey)) {
+      seenRoots.add(rootKey);
+      uniqueChains.push(chain);
+    }
+  });
+  
+  // Build a flat ordering: chain1 members, chain2 members, ...
+  const pokemonOrder = new Map<string, number>();
+  let order = 0;
+  uniqueChains.forEach(chain => {
+    chain.forEach(name => {
+      if (!pokemonOrder.has(name.toLowerCase())) {
+        pokemonOrder.set(name.toLowerCase(), order++);
+      }
     });
   });
   
+  // Group cards by set, ordered by release date
   const groupedBySets = new Map<string, PokemonCard[]>();
   cards.forEach(card => {
     if (!groupedBySets.has(card.setCode)) {
@@ -80,21 +94,18 @@ function sortByEvolutionChain(cards: PokemonCard[], selectedPokemon: string[]): 
   const result: PokemonCard[] = [];
   
   setsByDate.forEach(([, setCards]) => {
-    const chain = chains.get(selectedPokemon[0]?.toLowerCase()) || [];
-    
-    chain.forEach(pokemon => {
-      const pokemonCards = setCards.filter(
-        card => card.pokemonName.toLowerCase() === pokemon.toLowerCase()
-      );
+    // Sort cards within each set by evolution chain order, then card number
+    const sorted = [...setCards].sort((a, b) => {
+      const orderA = pokemonOrder.get(a.pokemonName.toLowerCase()) ?? Number.MAX_SAFE_INTEGER;
+      const orderB = pokemonOrder.get(b.pokemonName.toLowerCase()) ?? Number.MAX_SAFE_INTEGER;
+      if (orderA !== orderB) return orderA - orderB;
       
-      pokemonCards.sort((a, b) => {
-        const aNum = parseInt(a.setNumber.split('/')[0]);
-        const bNum = parseInt(b.setNumber.split('/')[0]);
-        return aNum - bNum;
-      });
-      
-      result.push(...pokemonCards);
+      const aNum = parseInt(a.setNumber.split('/')[0]);
+      const bNum = parseInt(b.setNumber.split('/')[0]);
+      return aNum - bNum;
     });
+    
+    result.push(...sorted);
   });
   
   return result;
