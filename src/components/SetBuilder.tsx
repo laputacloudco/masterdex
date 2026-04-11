@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import type { MasterSetType, SortOrder, VariantFilters } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -58,6 +59,16 @@ export function SetBuilder({
   const currentSortOrder = sortOrder || 'chronological';
   const currentSelectedPokemon = selectedPokemon || [];
   const currentSelectedSets = selectedSets || [];
+
+  // Auto-reset sortOrder when switching modes if the current value is invalid
+  useEffect(() => {
+    if (currentMasterSetType === 'official-set' && currentSortOrder === 'evolution-chain') {
+      setSortOrder('chronological');
+    }
+    if (currentMasterSetType === 'pokemon-collection' && currentSortOrder === 'set-order') {
+      setSortOrder('chronological');
+    }
+  }, [currentMasterSetType, currentSortOrder, setSortOrder]);
 
   const handleVariantToggle = (variant: keyof VariantFilters) => {
     setVariantFilters({
