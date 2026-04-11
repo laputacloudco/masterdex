@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { MagnifyingGlass, X, Lightning } from '@phosphor-icons/react';
 import { searchPokemon } from '@/lib/pokemonTcgApi';
 import { getEvolutionChain } from '@/lib/pokemonData';
@@ -12,16 +10,12 @@ interface PokemonSelectorProps {
   selectedPokemon: string[];
   onSelectPokemon: (pokemon: string | string[]) => void;
   onRemovePokemon: (pokemon: string) => void;
-  includeEvolutionChain: boolean;
-  setIncludeEvolutionChain: (value: boolean) => void;
 }
 
 export function PokemonSelector({ 
   selectedPokemon, 
   onSelectPokemon, 
   onRemovePokemon,
-  includeEvolutionChain,
-  setIncludeEvolutionChain
 }: PokemonSelectorProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<string[]>([]);
@@ -52,14 +46,16 @@ export function PokemonSelector({
   }, [searchTerm, selectedPokemon]);
 
   const handleSelect = (pokemon: string) => {
-    if (includeEvolutionChain) {
-      const chain = getEvolutionChain(pokemon);
-      const newPokemon = chain.filter(p => !selectedPokemon.includes(p));
-      if (newPokemon.length > 0) {
-        onSelectPokemon(newPokemon);
-      }
-    } else {
-      onSelectPokemon(pokemon);
+    onSelectPokemon(pokemon);
+    setSearchTerm('');
+    setSearchResults([]);
+  };
+
+  const handleSelectWithEvolutions = (pokemon: string) => {
+    const chain = getEvolutionChain(pokemon);
+    const newPokemon = chain.filter(p => !selectedPokemon.includes(p));
+    if (newPokemon.length > 0) {
+      onSelectPokemon(newPokemon);
     }
     setSearchTerm('');
     setSearchResults([]);
@@ -77,22 +73,6 @@ export function PokemonSelector({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
-          <Switch
-            id="evolution-chain-toggle"
-            checked={includeEvolutionChain}
-            onCheckedChange={setIncludeEvolutionChain}
-          />
-          <div className="flex-1">
-            <Label htmlFor="evolution-chain-toggle" className="cursor-pointer font-medium">
-              Include Evolution Chains
-            </Label>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Automatically add full evolution lines when selecting Pokemon
-            </p>
-          </div>
-        </div>
-
         <div className="relative">
           <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -106,20 +86,29 @@ export function PokemonSelector({
 
         {searchTerm && searchResults.length > 0 && (
           <div className="border rounded-lg p-2 max-h-48 overflow-y-auto space-y-1">
-            {searchResults.slice(0, 10).map(pokemon => (
-              <button
-                key={pokemon}
-                onClick={() => handleSelect(pokemon)}
-                className="w-full text-left px-3 py-2 rounded hover:bg-accent transition-colors"
-              >
-                <span className="font-medium">{pokemon}</span>
-                {includeEvolutionChain && (
-                  <Badge variant="secondary" className="ml-2 text-xs">
-                    + Evolution Chain
-                  </Badge>
-                )}
-              </button>
-            ))}
+            {searchResults.slice(0, 10).map(pokemon => {
+              const chain = getEvolutionChain(pokemon);
+              const hasEvolutions = chain.length > 1;
+              return (
+                <div key={pokemon} className="flex items-center gap-2 px-3 py-2 rounded hover:bg-accent transition-colors">
+                  <button
+                    onClick={() => handleSelect(pokemon)}
+                    className="flex-1 text-left"
+                  >
+                    <span className="font-medium">{pokemon}</span>
+                  </button>
+                  {hasEvolutions && (
+                    <button
+                      onClick={() => handleSelectWithEvolutions(pokemon)}
+                    >
+                      <Badge variant="secondary" className="text-xs cursor-pointer hover:bg-secondary/80">
+                        + evolutions
+                      </Badge>
+                    </button>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 
