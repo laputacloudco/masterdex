@@ -7,6 +7,7 @@ import { Checklist } from '@/components/Checklist';
 import { SavedSetlists } from '@/components/SavedSetlists';
 import { VariantStatistics } from '@/components/VariantStatistics';
 import { CameoBrowser } from '@/components/CameoBrowser';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { fetchCardsForSet, fetchCardsForPokemon } from '@/lib/pokemonTcgApi';
 import { sortCards } from '@/lib/cardUtils';
 import { toast } from 'sonner';
@@ -132,19 +133,25 @@ function App() {
   const canViewChecklist = cards.length > 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
+    <div className="min-h-screen bg-background">
+      <div className="fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,var(--gradient-start),transparent_50%),radial-gradient(ellipse_at_bottom_right,var(--gradient-end),transparent_50%)]" />
       <div className="container mx-auto px-4 py-8 max-w-7xl">
-        <header className="mb-8 text-center">
-          <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-            Pokomplete
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            Build comprehensive checklists for your Pokemon card collection
-          </p>
+        <header className="mb-10 relative">
+          <div className="absolute right-0 top-0">
+            <ThemeToggle />
+          </div>
+          <div className="text-center pt-2">
+            <h1 className="text-5xl md:text-6xl font-bold mb-3 bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent tracking-tight">
+              Pokomplete
+            </h1>
+            <p className="text-base text-muted-foreground max-w-lg mx-auto">
+              Build comprehensive checklists for your Pokémon card collection
+            </p>
+          </div>
         </header>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-3">
+          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-3 mb-2">
             <TabsTrigger value="builder">Build Set</TabsTrigger>
             <TabsTrigger value="checklist" disabled={!canViewChecklist}>
               Checklist {canViewChecklist && `(${cards.length})`}

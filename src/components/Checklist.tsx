@@ -198,7 +198,7 @@ export function Checklist({ cards, setName }: ChecklistProps) {
                       {card.variant === 'cameo' && (
                         <Badge 
                           variant="secondary" 
-                          className="text-xs bg-indigo-100 text-indigo-700 border-indigo-200"
+                          className="text-xs bg-accent/15 text-accent border-accent/30"
                         >
                           <UserCircle size={12} weight="fill" className="mr-1" />
                           Cameo

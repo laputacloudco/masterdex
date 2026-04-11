@@ -46,12 +46,12 @@ export function CameoBrowser() {
 
   return (
     <div className="space-y-6">
-      <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200">
+      <Card className="bg-gradient-to-br from-accent/10 to-secondary/10 border-accent/20">
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
-                <UserCircle size={28} weight="fill" className="text-indigo-600" />
+                <UserCircle size={28} weight="fill" className="text-accent" />
                 Cameo Card Database
               </CardTitle>
               <CardDescription className="mt-2">
@@ -70,20 +70,20 @@ export function CameoBrowser() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white rounded-lg p-4 border border-indigo-100">
-              <div className="text-2xl font-bold text-indigo-600">{stats.totalEntries}</div>
+            <div className="bg-card rounded-lg p-4 border border-accent/20">
+              <div className="text-2xl font-bold text-accent">{stats.totalEntries}</div>
               <div className="text-sm text-muted-foreground">Official Database</div>
             </div>
-            <div className="bg-white rounded-lg p-4 border border-indigo-100">
-              <div className="text-2xl font-bold text-purple-600">{stats.uniquePokemon}</div>
+            <div className="bg-card rounded-lg p-4 border border-accent/20">
+              <div className="text-2xl font-bold text-secondary">{stats.uniquePokemon}</div>
               <div className="text-sm text-muted-foreground">Unique Pokemon</div>
             </div>
-            <div className="bg-white rounded-lg p-4 border border-indigo-100">
-              <div className="text-2xl font-bold text-pink-600">{stats.uniqueSets}</div>
+            <div className="bg-card rounded-lg p-4 border border-accent/20">
+              <div className="text-2xl font-bold text-primary">{stats.uniqueSets}</div>
               <div className="text-sm text-muted-foreground">Different Sets</div>
             </div>
-            <div className="bg-white rounded-lg p-4 border border-indigo-100">
-              <div className="text-2xl font-bold text-violet-600">
+            <div className="bg-card rounded-lg p-4 border border-accent/20">
+              <div className="text-2xl font-bold text-accent">
                 {userContributionCount}
               </div>
               <div className="text-sm text-muted-foreground">Your Contributions</div>
@@ -215,7 +215,7 @@ function CameoCard({ entry, isUserContributed }: { entry: CameoEntry; isUserCont
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-sm font-medium text-muted-foreground">Main:</span>
-              <Badge variant="secondary" className="bg-indigo-100 text-indigo-700">
+              <Badge variant="secondary" className="bg-accent/15 text-accent border-accent/30">
                 <UserCircle size={14} weight="fill" className="mr-1" />
                 {entry.mainPokemon}
               </Badge>
