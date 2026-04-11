@@ -116,7 +116,7 @@ export async function mapTCGCardToCard(tcgCard: TCGCard, pokemonDisplayName?: st
         market: firstPriceType.market,
         high: firstPriceType.high,
       };
-      marketPrice = firstPriceType.market || firstPriceType.mid;
+      marketPrice = firstPriceType.market ?? firstPriceType.mid;
     }
   }
   

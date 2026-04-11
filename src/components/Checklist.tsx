@@ -24,14 +24,14 @@ const SORT_LABELS: Record<ChecklistSortOrder, string> = {
   'name-z-a': 'Name: Z–A',
 };
 
-function sortChecklist(cards: PokemonCard[], order: ChecklistSortOrder): PokemonCard[] {
+function sortChecklist(cards: PokemonCard[], order: ChecklistSortOrder, getPrice: (card: PokemonCard) => number): PokemonCard[] {
   if (order === 'default') return cards;
   const sorted = [...cards];
   switch (order) {
     case 'price-high-low':
-      return sorted.sort((a, b) => (b.marketPrice || 0) - (a.marketPrice || 0));
+      return sorted.sort((a, b) => getPrice(b) - getPrice(a));
     case 'price-low-high':
-      return sorted.sort((a, b) => (a.marketPrice || 0) - (b.marketPrice || 0));
+      return sorted.sort((a, b) => getPrice(a) - getPrice(b));
     case 'name-a-z':
       return sorted.sort((a, b) => a.pokemonName.localeCompare(b.pokemonName, undefined, { sensitivity: 'base' }));
     case 'name-z-a':
@@ -70,8 +70,8 @@ export function Checklist({ cards, setName }: ChecklistProps) {
   const [condition, setCondition] = useState<CardCondition>('near-mint');
 
   const sortedCards = useMemo(
-    () => sortChecklist(cards, checklistSort),
-    [cards, checklistSort]
+    () => sortChecklist(cards, checklistSort, (card) => getPriceForCondition(card, condition) ?? 0),
+    [cards, checklistSort, condition]
   );
 
   const isChecked = (cardId: string) => checkedCards?.includes(cardId) || false;
@@ -153,7 +153,7 @@ export function Checklist({ cards, setName }: ChecklistProps) {
             </div>
             <div className="flex items-center gap-2">
               <Select value={condition} onValueChange={(v) => setCondition(v as CardCondition)}>
-                <SelectTrigger className="h-9 gap-1" size="default">
+                <SelectTrigger aria-label="Card condition" className="h-9 gap-1" size="default">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent align="end">
