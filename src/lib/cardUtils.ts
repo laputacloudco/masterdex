@@ -1,68 +1,80 @@
 import type { PokemonCard, SortOrder } from './types';
-import { getEvolutionChain } from './pokemonData';
+import { getEvolutionChain } from './pokeApi';
 
-export function sortCards(cards: PokemonCard[], sortOrder: SortOrder, selectedPokemon?: string[]): PokemonCard[] {
+/**
+ * Parse a card number for sorting. Handles numeric, alphanumeric,
+ * and promo-style numbers (e.g., "SWSH120", "TG15", "GG01").
+ */
+function parseCardNumber(setNumber: string): { numeric: number; raw: string } {
+  const num = setNumber.split('/')[0].trim();
+  const parsed = parseInt(num, 10);
+  return { numeric: isNaN(parsed) ? Infinity : parsed, raw: num };
+}
+
+function compareCardNumbers(a: PokemonCard, b: PokemonCard): number {
+  const aNum = parseCardNumber(a.setNumber);
+  const bNum = parseCardNumber(b.setNumber);
+  if (aNum.numeric !== bNum.numeric) return aNum.numeric - bNum.numeric;
+  return aNum.raw.localeCompare(bNum.raw);
+}
+
+export function sortCards(cards: PokemonCard[], sortOrder: SortOrder): PokemonCard[] {
   const sorted = [...cards];
   
   switch (sortOrder) {
     case 'set-order':
       return sorted.sort((a, b) => {
-        if (a.setCode !== b.setCode) {
-          return a.setCode.localeCompare(b.setCode);
-        }
-        const aNum = parseInt(a.setNumber.split('/')[0]);
-        const bNum = parseInt(b.setNumber.split('/')[0]);
-        return aNum - bNum;
+        if (a.setCode !== b.setCode) return a.setCode.localeCompare(b.setCode);
+        return compareCardNumbers(a, b);
       });
       
     case 'chronological':
       return sorted.sort((a, b) => {
         const dateCompare = new Date(a.releaseDate).getTime() - new Date(b.releaseDate).getTime();
         if (dateCompare !== 0) return dateCompare;
-        
-        const aNum = parseInt(a.setNumber.split('/')[0]);
-        const bNum = parseInt(b.setNumber.split('/')[0]);
-        return aNum - bNum;
+        return compareCardNumbers(a, b);
       });
       
     case 'grouped-by-set':
       return sorted.sort((a, b) => {
         const dateCompare = new Date(a.releaseDate).getTime() - new Date(b.releaseDate).getTime();
         if (dateCompare !== 0) return dateCompare;
-        
-        if (a.setCode !== b.setCode) {
-          return a.setCode.localeCompare(b.setCode);
-        }
-        
-        if (a.pokemonName !== b.pokemonName) {
-          return a.pokemonName.localeCompare(b.pokemonName);
-        }
-        
-        const aNum = parseInt(a.setNumber.split('/')[0]);
-        const bNum = parseInt(b.setNumber.split('/')[0]);
-        return aNum - bNum;
+        if (a.setCode !== b.setCode) return a.setCode.localeCompare(b.setCode);
+        if (a.pokemonName !== b.pokemonName) return a.pokemonName.localeCompare(b.pokemonName);
+        return compareCardNumbers(a, b);
       });
       
     case 'evolution-chain':
-      return sortByEvolutionChain(sorted, selectedPokemon || []);
+      // Return unsorted — caller must use sortByEvolutionChainAsync
+      return sorted;
       
     default:
       return sorted;
   }
 }
 
-function sortByEvolutionChain(cards: PokemonCard[], selectedPokemon: string[]): PokemonCard[] {
-  const chains = new Map<string, string[]>();
-  const allPokemonInChain = new Set<string>();
-  
-  selectedPokemon.forEach(pokemon => {
-    const chain = getEvolutionChain(pokemon);
-    chain.forEach(p => {
-      chains.set(p.toLowerCase(), chain);
-      allPokemonInChain.add(p.toLowerCase());
+/**
+ * Sort cards by evolution chain order (async — requires PokeAPI lookup).
+ * Groups cards by set date, then orders within each set by evolution position.
+ */
+export async function sortByEvolutionChainAsync(
+  cards: PokemonCard[],
+  selectedPokemon: string[]
+): Promise<PokemonCard[]> {
+  if (selectedPokemon.length === 0) return cards;
+
+  // Build a set of all chains for selected Pokemon
+  const chainOrderMap = new Map<string, number>();
+  for (const pokemon of selectedPokemon) {
+    const chain = await getEvolutionChain(pokemon);
+    chain.forEach((name, index) => {
+      if (!chainOrderMap.has(name.toLowerCase())) {
+        chainOrderMap.set(name.toLowerCase(), index);
+      }
     });
-  });
-  
+  }
+
+  // Group cards by set
   const groupedBySets = new Map<string, PokemonCard[]>();
   cards.forEach(card => {
     if (!groupedBySets.has(card.setCode)) {
@@ -71,32 +83,25 @@ function sortByEvolutionChain(cards: PokemonCard[], selectedPokemon: string[]): 
     groupedBySets.get(card.setCode)!.push(card);
   });
   
+  // Sort sets by release date
   const setsByDate = Array.from(groupedBySets.entries()).sort((a, b) => {
     const dateA = a[1][0]?.releaseDate || '';
     const dateB = b[1][0]?.releaseDate || '';
     return new Date(dateA).getTime() - new Date(dateB).getTime();
   });
-  
+
   const result: PokemonCard[] = [];
-  
-  setsByDate.forEach(([, setCards]) => {
-    const chain = chains.get(selectedPokemon[0]?.toLowerCase()) || [];
-    
-    chain.forEach(pokemon => {
-      const pokemonCards = setCards.filter(
-        card => card.pokemonName.toLowerCase() === pokemon.toLowerCase()
-      );
-      
-      pokemonCards.sort((a, b) => {
-        const aNum = parseInt(a.setNumber.split('/')[0]);
-        const bNum = parseInt(b.setNumber.split('/')[0]);
-        return aNum - bNum;
-      });
-      
-      result.push(...pokemonCards);
+  for (const [, setCards] of setsByDate) {
+    // Sort within each set by evolution chain position, then card number
+    const sorted = [...setCards].sort((a, b) => {
+      const aOrder = chainOrderMap.get(a.pokemonName.toLowerCase()) ?? Infinity;
+      const bOrder = chainOrderMap.get(b.pokemonName.toLowerCase()) ?? Infinity;
+      if (aOrder !== bOrder) return aOrder - bOrder;
+      return compareCardNumbers(a, b);
     });
-  });
-  
+    result.push(...sorted);
+  }
+
   return result;
 }
 

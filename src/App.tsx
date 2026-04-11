@@ -7,8 +7,8 @@ import { Checklist } from '@/components/Checklist';
 import { SavedSetlists } from '@/components/SavedSetlists';
 import { VariantStatistics } from '@/components/VariantStatistics';
 import { CameoBrowser } from '@/components/CameoBrowser';
-import { fetchCardsForSet, fetchCardsForPokemon } from '@/lib/pokemonTcgApi';
-import { sortCards } from '@/lib/cardUtils';
+import { fetchCardsForSet, fetchCardsForPokemon, deduplicateCards } from '@/lib/pokemonTcgApi';
+import { sortCards, sortByEvolutionChainAsync } from '@/lib/cardUtils';
 import { toast } from 'sonner';
 
 const DEFAULT_VARIANT_FILTERS: VariantFilters = {
@@ -65,7 +65,7 @@ function App() {
           fetchedCards = results.flat();
         }
         
-        const filteredCards = fetchedCards.filter(card => {
+        const filteredCards = deduplicateCards(fetchedCards).filter(card => {
           if (card.variant === 'normal' && card.isHolo) {
             return currentVariantFilters.holo;
           }
@@ -98,7 +98,12 @@ function App() {
           }
         });
 
-        const sorted = sortCards(filteredCards, sortOrder || 'chronological', selectedPokemon || []);
+        let sorted: PokemonCard[];
+        if ((sortOrder || 'chronological') === 'evolution-chain') {
+          sorted = await sortByEvolutionChainAsync(filteredCards, selectedPokemon || []);
+        } else {
+          sorted = sortCards(filteredCards, sortOrder || 'chronological');
+        }
         setCards(sorted);
       } catch (error) {
         console.error('Error fetching cards:', error);

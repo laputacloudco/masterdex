@@ -21,8 +21,8 @@ interface SetBuilderProps {
   setSelectedPokemon: (value: string[]) => void;
   selectedSets: string[] | undefined;
   setSelectedSets: (value: string[]) => void;
-  includeEvolutionChain: boolean | undefined;
-  setIncludeEvolutionChain: (value: boolean) => void;
+  includeEvolutionChain?: boolean | undefined;
+  setIncludeEvolutionChain?: (value: boolean) => void;
   isLoading: boolean;
   cardCount: number;
 }
@@ -52,8 +52,6 @@ export function SetBuilder({
   setSelectedPokemon,
   selectedSets,
   setSelectedSets,
-  includeEvolutionChain,
-  setIncludeEvolutionChain,
   isLoading,
   cardCount,
 }: SetBuilderProps) {
@@ -62,7 +60,6 @@ export function SetBuilder({
   const currentSortOrder = sortOrder || 'chronological';
   const currentSelectedPokemon = selectedPokemon || [];
   const currentSelectedSets = selectedSets || [];
-  const currentIncludeEvolutionChain = includeEvolutionChain || false;
 
   const handleVariantToggle = (variant: keyof VariantFilters) => {
     setVariantFilters({
@@ -467,8 +464,6 @@ export function SetBuilder({
           onRemovePokemon={(pokemon) => {
             setSelectedPokemon(currentSelectedPokemon.filter(p => p !== pokemon));
           }}
-          includeEvolutionChain={currentIncludeEvolutionChain}
-          setIncludeEvolutionChain={setIncludeEvolutionChain}
         />
       )}
 
@@ -488,7 +483,7 @@ export function SetBuilder({
               )}
               <SelectItem value="chronological">Chronological (Release Date)</SelectItem>
               <SelectItem value="grouped-by-set">Grouped by Set</SelectItem>
-              {currentMasterSetType === 'pokemon-collection' && currentIncludeEvolutionChain && (
+              {currentMasterSetType === 'pokemon-collection' && (
                 <SelectItem value="evolution-chain">Evolution Chain Order</SelectItem>
               )}
             </SelectContent>

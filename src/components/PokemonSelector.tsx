@@ -2,29 +2,28 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { MagnifyingGlass, X, Lightning } from '@phosphor-icons/react';
+import { MagnifyingGlass, X, Lightning, ArrowRight } from '@phosphor-icons/react';
 import { searchPokemon } from '@/lib/pokemonTcgApi';
-import { getEvolutionChain } from '@/lib/pokemonData';
+import { getEvolutionChain } from '@/lib/pokeApi';
 
 interface PokemonSelectorProps {
   selectedPokemon: string[];
   onSelectPokemon: (pokemon: string | string[]) => void;
   onRemovePokemon: (pokemon: string) => void;
-  includeEvolutionChain: boolean;
-  setIncludeEvolutionChain: (value: boolean) => void;
+}
+
+interface SearchResult {
+  name: string;
+  chain: string[];
 }
 
 export function PokemonSelector({ 
   selectedPokemon, 
   onSelectPokemon, 
   onRemovePokemon,
-  includeEvolutionChain,
-  setIncludeEvolutionChain
 }: PokemonSelectorProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<string[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
@@ -36,9 +35,16 @@ export function PokemonSelector({
 
       setIsSearching(true);
       try {
-        const results = await searchPokemon(searchTerm);
-        const filtered = results.filter(name => !selectedPokemon.includes(name));
-        setSearchResults(filtered);
+        const names = await searchPokemon(searchTerm);
+        const filtered = names.filter(name => !selectedPokemon.includes(name));
+        // Fetch evolution chains for each result
+        const results = await Promise.all(
+          filtered.slice(0, 10).map(async (name) => {
+            const chain = await getEvolutionChain(name);
+            return { name, chain };
+          })
+        );
+        setSearchResults(results);
       } catch (error) {
         console.error('Search failed:', error);
         setSearchResults([]);
@@ -51,15 +57,16 @@ export function PokemonSelector({
     return () => clearTimeout(timeoutId);
   }, [searchTerm, selectedPokemon]);
 
-  const handleSelect = (pokemon: string) => {
-    if (includeEvolutionChain) {
-      const chain = getEvolutionChain(pokemon);
-      const newPokemon = chain.filter(p => !selectedPokemon.includes(p));
-      if (newPokemon.length > 0) {
-        onSelectPokemon(newPokemon);
-      }
-    } else {
-      onSelectPokemon(pokemon);
+  const handleSelectSingle = (pokemon: string) => {
+    onSelectPokemon(pokemon);
+    setSearchTerm('');
+    setSearchResults([]);
+  };
+
+  const handleSelectChain = (chain: string[]) => {
+    const newPokemon = chain.filter(p => !selectedPokemon.includes(p));
+    if (newPokemon.length > 0) {
+      onSelectPokemon(newPokemon);
     }
     setSearchTerm('');
     setSearchResults([]);
@@ -73,26 +80,10 @@ export function PokemonSelector({
           Select Pokemon
         </CardTitle>
         <CardDescription>
-          Choose which Pokemon to include in your master set
+          Add individual Pokemon or entire evolution chains
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
-          <Switch
-            id="evolution-chain-toggle"
-            checked={includeEvolutionChain}
-            onCheckedChange={setIncludeEvolutionChain}
-          />
-          <div className="flex-1">
-            <Label htmlFor="evolution-chain-toggle" className="cursor-pointer font-medium">
-              Include Evolution Chains
-            </Label>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Automatically add full evolution lines when selecting Pokemon
-            </p>
-          </div>
-        </div>
-
         <div className="relative">
           <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -105,20 +96,25 @@ export function PokemonSelector({
         </div>
 
         {searchTerm && searchResults.length > 0 && (
-          <div className="border rounded-lg p-2 max-h-48 overflow-y-auto space-y-1">
-            {searchResults.slice(0, 10).map(pokemon => (
-              <button
-                key={pokemon}
-                onClick={() => handleSelect(pokemon)}
-                className="w-full text-left px-3 py-2 rounded hover:bg-accent transition-colors"
-              >
-                <span className="font-medium">{pokemon}</span>
-                {includeEvolutionChain && (
-                  <Badge variant="secondary" className="ml-2 text-xs">
-                    + Evolution Chain
-                  </Badge>
+          <div className="border rounded-lg p-2 max-h-64 overflow-y-auto space-y-1">
+            {searchResults.map(({ name, chain }) => (
+              <div key={name} className="flex items-center gap-2 px-3 py-2 rounded hover:bg-muted/50 transition-colors">
+                <button
+                  onClick={() => handleSelectSingle(name)}
+                  className="font-medium hover:text-primary transition-colors"
+                >
+                  {name}
+                </button>
+                {chain.length > 1 && (
+                  <button
+                    onClick={() => handleSelectChain(chain)}
+                    className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors border rounded-full px-2.5 py-1 hover:border-primary/50"
+                  >
+                    <ArrowRight size={12} weight="bold" />
+                    {chain.join(' → ')}
+                  </button>
                 )}
-              </button>
+              </div>
             ))}
           </div>
         )}

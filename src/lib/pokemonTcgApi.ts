@@ -1,5 +1,8 @@
 import type { PokemonCard, PokemonSet, CardVariant } from './types';
 import { getCameoCardsForPokemon, type CameoEntry } from './cameoData';
+import { cacheGet, cacheSet, CACHE_TTL } from './apiCache';
+import { scheduledFetch } from './requestScheduler';
+import { getDexNumber, getSpecies, searchSpecies } from './pokeApi';
 
 const API_BASE_URL = 'https://api.pokemontcg.io/v2';
 
@@ -67,7 +70,7 @@ function mapVariant(card: TCGCard): CardVariant {
   if (rarity.includes('secret') || parseInt(card.number) > (card.set.printedTotal || card.set.total)) {
     return 'secret-rare';
   }
-  if (rarity.includes('ultra rare') || rarity.includes('full art')) {
+  if (rarity.includes('ultra rare') || rarity.includes('full art') || rarity.includes('illustration rare') || rarity.includes('special art')) {
     return 'full-art';
   }
   if (rarity.includes('gold') || rarity.includes('golden')) {
@@ -88,9 +91,19 @@ function isHoloCard(card: TCGCard): boolean {
   return rarity.includes('holo') || rarity.includes('rainbow') || rarity.includes('secret') || rarity.includes('ultra');
 }
 
-export function mapTCGCardToCard(tcgCard: TCGCard): PokemonCard {
-  const pokemonName = tcgCard.name.split(' ')[0];
-  
+/**
+ * Map a TCG API card to our app's PokemonCard type.
+ * Uses nationalPokedexNumbers to determine the Pokemon name via PokeAPI
+ * instead of unreliable name.split(' ')[0] parsing.
+ */
+export async function mapTCGCardToCard(tcgCard: TCGCard, pokemonDisplayName?: string): Promise<PokemonCard> {
+  // Determine Pokemon name from dex number or fallback
+  let resolvedName = pokemonDisplayName || tcgCard.name;
+  if (!pokemonDisplayName && tcgCard.nationalPokedexNumbers?.length) {
+    const species = await getSpecies(tcgCard.nationalPokedexNumbers[0]);
+    if (species) resolvedName = species.displayName;
+  }
+
   let marketPrice: number | undefined;
   if (tcgCard.tcgplayer?.prices) {
     const priceTypes = Object.values(tcgCard.tcgplayer.prices);
@@ -102,7 +115,7 @@ export function mapTCGCardToCard(tcgCard: TCGCard): PokemonCard {
   return {
     id: tcgCard.id,
     name: tcgCard.name,
-    pokemonName,
+    pokemonName: resolvedName,
     setName: tcgCard.set.name,
     setCode: tcgCard.set.id,
     setNumber: `${tcgCard.number}/${tcgCard.set.printedTotal || tcgCard.set.total}`,
@@ -126,86 +139,89 @@ export function mapTCGSetToSet(tcgSet: TCGSet): PokemonSet {
   };
 }
 
-export async function fetchAllSets(): Promise<PokemonSet[]> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/sets?orderBy=releaseDate`);
-    if (!response.ok) throw new Error('Failed to fetch sets');
-    
+/**
+ * Paginate through all pages of a TCG API query.
+ */
+async function fetchAllPages(baseUrl: string): Promise<TCGCard[]> {
+  let allCards: TCGCard[] = [];
+  let page = 1;
+
+  while (true) {
+    const url = `${baseUrl}&page=${page}&pageSize=250`;
+    const response = await scheduledFetch(url);
     const data = await response.json();
-    return data.data.map(mapTCGSetToSet);
-  } catch (error) {
-    console.error('Error fetching sets:', error);
-    throw error;
+    allCards = allCards.concat(data.data || []);
+
+    if (!data.totalPages || page >= data.totalPages) break;
+    page++;
   }
+
+  return allCards;
+}
+
+export async function fetchAllSets(): Promise<PokemonSet[]> {
+  const cacheKey = 'tcg:all-sets';
+  const cached = await cacheGet<PokemonSet[]>(cacheKey);
+  if (cached) return cached;
+
+  const response = await scheduledFetch(`${API_BASE_URL}/sets?orderBy=releaseDate`);
+  const data = await response.json();
+  const sets = (data.data as TCGSet[]).map(mapTCGSetToSet);
+
+  await cacheSet(cacheKey, sets, CACHE_TTL.TCG_SETS);
+  return sets;
 }
 
 export async function fetchCardsForSet(setId: string): Promise<PokemonCard[]> {
-  try {
-    let allCards: TCGCard[] = [];
-    let page = 1;
-    let hasMore = true;
-    
-    while (hasMore) {
-      const response = await fetch(
-        `${API_BASE_URL}/cards?q=set.id:${setId}&page=${page}&pageSize=250&orderBy=number`
-      );
-      
-      if (!response.ok) throw new Error('Failed to fetch cards');
-      
-      const data = await response.json();
-      allCards = allCards.concat(data.data);
-      
-      hasMore = data.page < data.totalPages;
-      page++;
-    }
-    
-    return allCards.map(mapTCGCardToCard);
-  } catch (error) {
-    console.error('Error fetching cards for set:', error);
-    throw error;
-  }
+  const cacheKey = `tcg:set-cards:${setId}`;
+  const cached = await cacheGet<PokemonCard[]>(cacheKey);
+  if (cached) return cached;
+
+  const tcgCards = await fetchAllPages(
+    `${API_BASE_URL}/cards?q=set.id:${setId}&orderBy=number`
+  );
+  const cards = await Promise.all(tcgCards.map(c => mapTCGCardToCard(c)));
+
+  await cacheSet(cacheKey, cards, CACHE_TTL.TCG_CARDS);
+  return cards;
 }
 
+/**
+ * Fetch all cards for a Pokemon by national dex number.
+ * This catches ALL variants regardless of name format:
+ * "Pikachu", "Pikachu V", "Detective Pikachu", "Marnie's Pikachu", etc.
+ */
 export async function fetchCardsForPokemon(pokemonName: string, includeCameos: boolean = false): Promise<PokemonCard[]> {
-  try {
-    let allCards: TCGCard[] = [];
-    let page = 1;
-    let hasMore = true;
-    
-    while (hasMore) {
-      const response = await fetch(
-        `${API_BASE_URL}/cards?q=name:"${pokemonName}*"&page=${page}&pageSize=250&orderBy=set.releaseDate`
-      );
-      
-      if (!response.ok) throw new Error('Failed to fetch cards');
-      
-      const data = await response.json();
-      allCards = allCards.concat(data.data);
-      
-      hasMore = data.page < data.totalPages;
-      page++;
-      
-      if (page > 10) break;
-    }
-    
-    const regularCards = allCards
-      .filter(card => {
-        const cardPokemonName = card.name.split(' ')[0].toLowerCase();
-        return cardPokemonName === pokemonName.toLowerCase();
-      })
-      .map(mapTCGCardToCard);
-    
-    if (includeCameos) {
-      const cameoEntries = getCameoCardsForPokemon(pokemonName);
-      const cameoCards = await fetchCameoCards(cameoEntries);
-      return [...regularCards, ...cameoCards];
-    }
-    
-    return regularCards;
-  } catch (error) {
-    console.error('Error fetching cards for pokemon:', error);
-    throw error;
+  const dexNum = await getDexNumber(pokemonName);
+  if (!dexNum) {
+    console.warn(`No dex number found for "${pokemonName}"`);
+    return [];
   }
+
+  const species = await getSpecies(dexNum);
+  const displayName = species?.displayName || pokemonName;
+
+  const cacheKey = `tcg:pokemon-cards:${dexNum}`;
+  let cards: PokemonCard[];
+
+  const cached = await cacheGet<PokemonCard[]>(cacheKey);
+  if (cached) {
+    cards = cached;
+  } else {
+    const tcgCards = await fetchAllPages(
+      `${API_BASE_URL}/cards?q=nationalPokedexNumbers:${dexNum}&orderBy=set.releaseDate`
+    );
+    cards = await Promise.all(tcgCards.map(c => mapTCGCardToCard(c, displayName)));
+    await cacheSet(cacheKey, cards, CACHE_TTL.TCG_CARDS);
+  }
+
+  if (includeCameos) {
+    const cameoEntries = getCameoCardsForPokemon(pokemonName);
+    const cameoCards = await fetchCameoCards(cameoEntries);
+    return [...cards, ...cameoCards];
+  }
+
+  return cards;
 }
 
 async function fetchCameoCards(cameoEntries: CameoEntry[]): Promise<PokemonCard[]> {
@@ -213,13 +229,11 @@ async function fetchCameoCards(cameoEntries: CameoEntry[]): Promise<PokemonCard[
   
   for (const entry of cameoEntries) {
     try {
-      const response = await fetch(`${API_BASE_URL}/cards/${entry.cardId}`);
-      if (response.ok) {
-        const data = await response.json();
-        const card = mapTCGCardToCard(data.data);
-        card.variant = 'cameo';
-        cameoCards.push(card);
-      }
+      const response = await scheduledFetch(`${API_BASE_URL}/cards/${entry.cardId}`);
+      const data = await response.json();
+      const card = await mapTCGCardToCard(data.data);
+      card.variant = 'cameo';
+      cameoCards.push(card);
     } catch (error) {
       console.warn(`Failed to fetch cameo card ${entry.cardId}:`, error);
     }
@@ -228,27 +242,26 @@ async function fetchCameoCards(cameoEntries: CameoEntry[]): Promise<PokemonCard[
   return cameoCards;
 }
 
+/**
+ * Search Pokemon names using the PokeAPI species index.
+ * Returns display names of matching species.
+ */
 export async function searchPokemon(query: string): Promise<string[]> {
-  try {
-    const response = await fetch(
-      `${API_BASE_URL}/cards?q=name:"${query}*"&pageSize=250`
-    );
-    
-    if (!response.ok) throw new Error('Failed to search Pokemon');
-    
-    const data = await response.json();
-    const pokemonNames = new Set<string>();
-    
-    data.data.forEach((card: TCGCard) => {
-      const name = card.name.split(' ')[0];
-      if (name && card.supertype === 'Pokémon') {
-        pokemonNames.add(name);
-      }
-    });
-    
-    return Array.from(pokemonNames).sort();
-  } catch (error) {
-    console.error('Error searching Pokemon:', error);
-    return [];
+  if (!query || query.length < 2) return [];
+
+  const species = await searchSpecies(query);
+  return species.map(s => s.displayName);
+}
+
+/**
+ * Deduplicate cards by ID after merging results from multiple sources.
+ */
+export function deduplicateCards(cards: PokemonCard[]): PokemonCard[] {
+  const seen = new Map<string, PokemonCard>();
+  for (const card of cards) {
+    if (!seen.has(card.id)) {
+      seen.set(card.id, card);
+    }
   }
+  return Array.from(seen.values());
 }
