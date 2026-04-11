@@ -144,14 +144,14 @@ export function Checklist({ cards, setName }: ChecklistProps) {
     <>
       <Card>
         <CardHeader>
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <CardTitle className="text-2xl">Master Set Checklist</CardTitle>
               <CardDescription className="mt-2">
                 {setName} • {totalCount} cards
               </CardDescription>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Select value={condition} onValueChange={(v) => setCondition(v as CardCondition)}>
                 <SelectTrigger aria-label="Card condition" className="h-9 gap-1" size="default">
                   <SelectValue />
