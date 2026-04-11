@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useKV } from '@/hooks/useKV';
 import type { PokemonCard } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,11 +7,38 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { Printer, CheckCircle, CurrencyDollar, FilePdf, CaretDown, Cards, UserCircle } from '@phosphor-icons/react';
+import { Printer, CheckCircle, CurrencyDollar, FilePdf, CaretDown, Cards, UserCircle, ArrowsDownUp } from '@phosphor-icons/react';
 import { formatCardName, getVariantLabel } from '@/lib/cardUtils';
 import { CardPreview } from './CardPreview';
 import { exportChecklistToPDF, exportPlaceholdersToPDF, printChecklist } from '@/lib/exportUtils';
 import { toast } from 'sonner';
+
+type ChecklistSortOrder = 'default' | 'price-high-low' | 'price-low-high' | 'name-a-z' | 'name-z-a';
+
+const SORT_LABELS: Record<ChecklistSortOrder, string> = {
+  'default': 'Default Order',
+  'price-high-low': 'Price: High to Low',
+  'price-low-high': 'Price: Low to High',
+  'name-a-z': 'Name: A–Z',
+  'name-z-a': 'Name: Z–A',
+};
+
+function sortChecklist(cards: PokemonCard[], order: ChecklistSortOrder): PokemonCard[] {
+  if (order === 'default') return cards;
+  const sorted = [...cards];
+  switch (order) {
+    case 'price-high-low':
+      return sorted.sort((a, b) => (b.marketPrice || 0) - (a.marketPrice || 0));
+    case 'price-low-high':
+      return sorted.sort((a, b) => (a.marketPrice || 0) - (b.marketPrice || 0));
+    case 'name-a-z':
+      return sorted.sort((a, b) => a.pokemonName.localeCompare(b.pokemonName, undefined, { sensitivity: 'base' }));
+    case 'name-z-a':
+      return sorted.sort((a, b) => b.pokemonName.localeCompare(a.pokemonName, undefined, { sensitivity: 'base' }));
+    default:
+      return sorted;
+  }
+}
 
 interface ChecklistProps {
   cards: PokemonCard[];
@@ -20,6 +47,12 @@ interface ChecklistProps {
 
 export function Checklist({ cards, setName }: ChecklistProps) {
   const [checkedCards, setCheckedCards] = useKV<string[]>(`checklist-${setName}`, []);
+  const [checklistSort, setChecklistSort] = useState<ChecklistSortOrder>('default');
+
+  const sortedCards = useMemo(
+    () => sortChecklist(cards, checklistSort),
+    [cards, checklistSort]
+  );
 
   const isChecked = (cardId: string) => checkedCards?.includes(cardId) || false;
 
@@ -98,7 +131,28 @@ export function Checklist({ cards, setName }: ChecklistProps) {
                 {setName} • {totalCount} cards
               </CardDescription>
             </div>
-            <DropdownMenu>
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="gap-2">
+                    <ArrowsDownUp />
+                    {checklistSort === 'default' ? 'Sort' : SORT_LABELS[checklistSort]}
+                    <CaretDown />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  {(Object.keys(SORT_LABELS) as ChecklistSortOrder[]).map((key) => (
+                    <DropdownMenuItem
+                      key={key}
+                      onClick={() => setChecklistSort(key)}
+                      className={checklistSort === key ? 'font-semibold bg-accent/10' : ''}
+                    >
+                      {SORT_LABELS[key]}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="gap-2">
                   <Printer />
@@ -125,7 +179,8 @@ export function Checklist({ cards, setName }: ChecklistProps) {
                   Export Missing Cards Proxies
                 </DropdownMenuItem>
               </DropdownMenuContent>
-            </DropdownMenu>
+              </DropdownMenu>
+            </div>
           </div>
         
         <div className="mt-4 space-y-2">
@@ -171,7 +226,7 @@ export function Checklist({ cards, setName }: ChecklistProps) {
       <CardContent>
         <ScrollArea className="h-[600px] pr-4">
           <div className="space-y-2">
-            {cards.map((card) => {
+            {sortedCards.map((card) => {
               const checked = isChecked(card.id);
               return (
                 <div
