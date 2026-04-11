@@ -55,7 +55,7 @@ export function VariantStatistics({ cards }: VariantStatisticsProps) {
               <CardTitle className="flex items-center gap-2">
                 <Medal weight="fill" className="text-accent" size={24} />
                 Variant Statistics
-                <Badge variant="outline" className="font-mono ml-1">{total}</Badge>
+                <Badge variant="outline" className="font-mono ml-1" aria-label={`Total cards: ${total}`}>{total}</Badge>
               </CardTitle>
               <CaretDown
                 size={18}
