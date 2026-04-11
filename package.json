@@ -8,7 +8,8 @@
         "build": "tsc -b --noCheck && vite build",
         "lint": "eslint .",
         "typecheck": "tsc -b",
-        "preview": "vite preview"
+        "preview": "vite preview",
+        "import-cameos": "node scripts/import-cameos.mjs"
     },
     "dependencies": {
         "@phosphor-icons/react": "^2.1.7",
