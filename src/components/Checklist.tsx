@@ -299,9 +299,23 @@ export function Checklist({ cards, setName }: ChecklistProps) {
                       </span>
                       
                       {card.marketPrice && (
-                        <Badge variant="outline" className="text-xs font-mono">
-                          ${card.marketPrice.toFixed(2)}
-                        </Badge>
+                        card.tcgPlayerUrl ? (
+                          <a
+                            href={card.tcgPlayerUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Badge variant="outline" className="text-xs font-mono hover:bg-accent/10 cursor-pointer">
+                              ${card.marketPrice.toFixed(2)}
+                              <span className="ml-1 text-muted-foreground font-sans">TCGPlayer</span>
+                            </Badge>
+                          </a>
+                        ) : (
+                          <Badge variant="outline" className="text-xs font-mono">
+                            ${card.marketPrice.toFixed(2)}
+                          </Badge>
+                        )
                       )}
                     </div>
                   </div>
