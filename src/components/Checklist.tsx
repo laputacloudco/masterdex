@@ -332,7 +332,7 @@ export function Checklist({ cards, setName }: ChecklistProps) {
                       
                       {(() => {
                         const displayPrice = getPriceForCondition(card, condition);
-                        if (!displayPrice) return null;
+                        if (displayPrice == null || !Number.isFinite(displayPrice)) return null;
                         return card.tcgPlayerUrl ? (
                           <a
                             href={card.tcgPlayerUrl}
