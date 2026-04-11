@@ -229,13 +229,30 @@ async function fetchCameoCards(cameoEntries: CameoEntry[]): Promise<PokemonCard[
   
   for (const entry of cameoEntries) {
     try {
+      // Cameo entries from the spreadsheet lack cardId — search by name + set
+      if (!entry.cardId) {
+        const query = entry.setName
+          ? `name:"${entry.cardName}" set.name:"${entry.setName}"`
+          : `name:"${entry.cardName}"`;
+        const url = `${API_BASE_URL}/cards?q=${encodeURIComponent(query)}&pageSize=1`;
+        const response = await scheduledFetch(url);
+        const data = await response.json();
+        if (data.data?.length > 0) {
+          const card = await mapTCGCardToCard(data.data[0]);
+          card.variant = 'cameo';
+          cameoCards.push(card);
+        }
+        continue;
+      }
+
       const response = await scheduledFetch(`${API_BASE_URL}/cards/${entry.cardId}`);
       const data = await response.json();
+      if (!data.data?.set) continue;
       const card = await mapTCGCardToCard(data.data);
       card.variant = 'cameo';
       cameoCards.push(card);
     } catch (error) {
-      console.warn(`Failed to fetch cameo card ${entry.cardId}:`, error);
+      console.warn(`Failed to fetch cameo card "${entry.cardName}":`, error);
     }
   }
   

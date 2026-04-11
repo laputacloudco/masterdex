@@ -190,6 +190,7 @@ function App() {
                   setSelectedSets={setSelectedSets}
                   isLoading={isLoading}
                   cardCount={cards.length}
+                  onViewChecklist={() => setActiveTab('checklist')}
                 />
               </div>
             </div>

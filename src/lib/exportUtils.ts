@@ -64,6 +64,19 @@ export async function exportPlaceholdersToPDF(
   const cardsPerCol = 3;
   const cardsPerPage = cardsPerRow * cardsPerCol;
 
+  // Pre-load images as grayscale data URLs
+  const imageCache = new Map<string, string>();
+  for (const card of uncheckedCards) {
+    if (card.imageUrl && !imageCache.has(card.imageUrl)) {
+      try {
+        const dataUrl = await loadImageAsGrayscale(card.imageUrl);
+        if (dataUrl) imageCache.set(card.imageUrl, dataUrl);
+      } catch {
+        // Skip failed images — will render text-only placeholder
+      }
+    }
+  }
+
   uncheckedCards.forEach((card, i) => {
     const cardIndexOnPage = i % cardsPerPage;
     const row = Math.floor(cardIndexOnPage / cardsPerRow);
@@ -76,30 +89,89 @@ export async function exportPlaceholdersToPDF(
     const x = marginX + (col * cardWidth);
     const y = marginY + (row * cardHeight);
     
+    // Draw card border
     pdf.setDrawColor(200, 200, 200);
     pdf.setLineWidth(0.5);
     pdf.roundedRect(x, y, cardWidth, cardHeight, 3, 3);
-    
-    pdf.setFontSize(8);
-    pdf.setFont('helvetica', 'bold');
-    const nameLines = pdf.splitTextToSize(card.name, cardWidth - 6);
-    pdf.text(nameLines, x + 3, y + 5);
-    
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(7);
-    pdf.text(`${card.setCode} ${card.setNumber}`, x + 3, y + 12);
-    
-    if (card.variant !== 'normal') {
-      pdf.text(`${card.variant}`, x + 3, y + 17);
+
+    // Try to add the grayscale card image
+    const imgData = card.imageUrl ? imageCache.get(card.imageUrl) : undefined;
+    if (imgData) {
+      try {
+        // Image fills the card area with small padding
+        pdf.addImage(imgData, 'PNG', x + 1, y + 1, cardWidth - 2, cardHeight - 2);
+      } catch {
+        renderTextPlaceholder(pdf, card, x, y, cardWidth, cardHeight);
+      }
+    } else {
+      renderTextPlaceholder(pdf, card, x, y, cardWidth, cardHeight);
     }
-    
-    pdf.setFontSize(6);
-    pdf.setTextColor(150, 150, 150);
-    pdf.text('PLACEHOLDER', x + cardWidth / 2, y + cardHeight / 2, { align: 'center' });
-    pdf.setTextColor(0, 0, 0);
   });
 
   pdf.save(`${setName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_placeholders.pdf`);
+}
+
+function renderTextPlaceholder(
+  pdf: jsPDF, card: PokemonCard,
+  x: number, y: number, cardWidth: number, cardHeight: number
+) {
+  pdf.setFontSize(8);
+  pdf.setFont('helvetica', 'bold');
+  const nameLines = pdf.splitTextToSize(card.name, cardWidth - 6);
+  pdf.text(nameLines, x + 3, y + 5);
+  
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(7);
+  pdf.text(`${card.setCode} ${card.setNumber}`, x + 3, y + 12);
+  
+  if (card.variant !== 'normal') {
+    pdf.text(`${card.variant}`, x + 3, y + 17);
+  }
+  
+  pdf.setFontSize(6);
+  pdf.setTextColor(150, 150, 150);
+  pdf.text('PLACEHOLDER', x + cardWidth / 2, y + cardHeight / 2, { align: 'center' });
+  pdf.setTextColor(0, 0, 0);
+}
+
+/**
+ * Load an image URL and convert to a grayscale data URL for PDF embedding.
+ */
+async function loadImageAsGrayscale(url: string): Promise<string | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) { resolve(null); return; }
+        
+        ctx.drawImage(img, 0, 0);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        
+        // Convert to grayscale
+        for (let i = 0; i < data.length; i += 4) {
+          const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+          data[i] = gray;
+          data[i + 1] = gray;
+          data[i + 2] = gray;
+        }
+        
+        ctx.putImageData(imageData, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      } catch {
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    // Timeout after 5 seconds
+    setTimeout(() => resolve(null), 5000);
+    img.src = url;
+  });
 }
 
 export function printChecklist() {

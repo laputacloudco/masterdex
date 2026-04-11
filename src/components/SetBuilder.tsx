@@ -25,6 +25,7 @@ interface SetBuilderProps {
   setIncludeEvolutionChain?: (value: boolean) => void;
   isLoading: boolean;
   cardCount: number;
+  onViewChecklist?: () => void;
 }
 
 const DEFAULT_VARIANT_FILTERS: VariantFilters = {
@@ -54,6 +55,7 @@ export function SetBuilder({
   setSelectedSets,
   isLoading,
   cardCount,
+  onViewChecklist,
 }: SetBuilderProps) {
   const currentMasterSetType = masterSetType || 'pokemon-collection';
   const currentVariantFilters = variantFilters || DEFAULT_VARIANT_FILTERS;
@@ -503,15 +505,15 @@ export function SetBuilder({
       )}
 
       {!isLoading && cardCount > 0 && (
-        <Card className="bg-primary/10 border-primary/30">
+        <Card
+          className="bg-primary/10 border-primary/30 cursor-pointer hover:bg-primary/20 transition-colors"
+          onClick={onViewChecklist}
+        >
           <CardContent className="pt-6">
             <div className="flex items-center justify-center gap-2">
               <Badge variant="secondary" className="text-base px-4 py-2">
-                {cardCount} cards loaded
+                {cardCount} cards loaded — view checklist →
               </Badge>
-              <span className="text-sm text-muted-foreground">
-                Switch to Checklist tab to view
-              </span>
             </div>
           </CardContent>
         </Card>
