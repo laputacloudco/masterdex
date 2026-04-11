@@ -14,7 +14,7 @@ export function VariantStatistics({ cards }: VariantStatisticsProps) {
 
   const stats = {
     normal: cards.filter(c => c.variant === 'normal' && !c.isHolo).length,
-    holo: cards.filter(c => c.variant === 'normal' && c.isHolo || c.variant === 'holo').length,
+    holo: cards.filter(c => (c.variant === 'normal' && c.isHolo) || c.variant === 'holo').length,
     reverseHolo: cards.filter(c => c.variant === 'reverse-holo').length,
     fullArt: cards.filter(c => c.variant === 'full-art').length,
     secretRare: cards.filter(c => c.variant === 'secret-rare').length,
@@ -51,7 +51,7 @@ export function VariantStatistics({ cards }: VariantStatisticsProps) {
       <Card className="border-accent/30">
         <CardHeader>
           <CollapsibleTrigger asChild>
-            <button className="flex items-center justify-between w-full text-left gap-2 cursor-pointer">
+            <button type="button" aria-expanded={open} className="flex items-center justify-between w-full text-left gap-2 cursor-pointer">
               <CardTitle className="flex items-center gap-2">
                 <Medal weight="fill" className="text-accent" size={24} />
                 Variant Statistics
