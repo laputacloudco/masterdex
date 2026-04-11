@@ -189,30 +189,34 @@ export function getEvolutionChain(pokemonName: string): string[] {
   
   if (!species) return [pokemonName];
   
-  const chain: string[] = [];
-  
-  let current = species;
-  while (current.evolvesFrom) {
-    const parent = POKEMON_SPECIES[current.evolvesFrom.toLowerCase()];
+  // Walk up to the root of the chain
+  let root = species;
+  while (root.evolvesFrom) {
+    const parent = POKEMON_SPECIES[root.evolvesFrom.toLowerCase()];
     if (parent) {
-      chain.unshift(parent.name);
-      current = parent;
+      root = parent;
     } else {
       break;
     }
   }
   
-  chain.push(species.name);
+  // BFS from root to collect the full family (handles branching like Eevee)
+  const chain: string[] = [];
+  const visited = new Set<string>();
+  const queue = [root];
   
-  let evolutions = species.evolvesTo || [];
-  while (evolutions.length > 0) {
-    const nextEvolution = evolutions[0];
-    const next = POKEMON_SPECIES[nextEvolution.toLowerCase()];
-    if (next) {
-      chain.push(next.name);
-      evolutions = next.evolvesTo || [];
-    } else {
-      break;
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    const key = current.name.toLowerCase();
+    if (visited.has(key)) continue;
+    visited.add(key);
+    chain.push(current.name);
+    
+    for (const evoName of current.evolvesTo || []) {
+      const evo = POKEMON_SPECIES[evoName.toLowerCase()];
+      if (evo && !visited.has(evo.name.toLowerCase())) {
+        queue.push(evo);
+      }
     }
   }
   
