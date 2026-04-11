@@ -105,10 +105,18 @@ export async function mapTCGCardToCard(tcgCard: TCGCard, pokemonDisplayName?: st
   }
 
   let marketPrice: number | undefined;
+  let prices: { low?: number; mid?: number; market?: number; high?: number } | undefined;
   if (tcgCard.tcgplayer?.prices) {
     const priceTypes = Object.values(tcgCard.tcgplayer.prices);
     if (priceTypes.length > 0) {
-      marketPrice = priceTypes[0].market || priceTypes[0].mid;
+      const firstPriceType = priceTypes[0];
+      prices = {
+        low: firstPriceType.low,
+        mid: firstPriceType.mid,
+        market: firstPriceType.market,
+        high: firstPriceType.high,
+      };
+      marketPrice = firstPriceType.market ?? firstPriceType.mid;
     }
   }
   
@@ -126,6 +134,7 @@ export async function mapTCGCardToCard(tcgCard: TCGCard, pokemonDisplayName?: st
     imageUrl: tcgCard.images.small,
     largeImageUrl: tcgCard.images.large,
     marketPrice,
+    prices,
     tcgPlayerUrl: tcgCard.tcgplayer?.url,
   };
 }

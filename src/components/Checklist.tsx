@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
 import { useKV } from '@/hooks/useKV';
-import type { PokemonCard } from '@/lib/types';
+import type { CardCondition, PokemonCard } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Printer, CheckCircle, CurrencyDollar, FilePdf, CaretDown, Cards, UserCircle, ArrowsDownUp } from '@phosphor-icons/react';
 import { formatCardName, getVariantLabel } from '@/lib/cardUtils';
@@ -23,20 +24,38 @@ const SORT_LABELS: Record<ChecklistSortOrder, string> = {
   'name-z-a': 'Name: Z–A',
 };
 
-function sortChecklist(cards: PokemonCard[], order: ChecklistSortOrder): PokemonCard[] {
+function sortChecklist(cards: PokemonCard[], order: ChecklistSortOrder, getPrice: (card: PokemonCard) => number): PokemonCard[] {
   if (order === 'default') return cards;
   const sorted = [...cards];
   switch (order) {
     case 'price-high-low':
-      return sorted.sort((a, b) => (b.marketPrice || 0) - (a.marketPrice || 0));
+      return sorted.sort((a, b) => getPrice(b) - getPrice(a));
     case 'price-low-high':
-      return sorted.sort((a, b) => (a.marketPrice || 0) - (b.marketPrice || 0));
+      return sorted.sort((a, b) => getPrice(a) - getPrice(b));
     case 'name-a-z':
       return sorted.sort((a, b) => a.pokemonName.localeCompare(b.pokemonName, undefined, { sensitivity: 'base' }));
     case 'name-z-a':
       return sorted.sort((a, b) => b.pokemonName.localeCompare(a.pokemonName, undefined, { sensitivity: 'base' }));
     default:
       return sorted;
+  }
+}
+
+const CONDITION_LABELS: Record<CardCondition, string> = {
+  'near-mint': 'Near Mint',
+  'lightly-played': 'Lightly Played',
+  'moderately-played': 'Moderately Played',
+};
+
+function getPriceForCondition(card: PokemonCard, condition: CardCondition): number | undefined {
+  if (!card.prices) return card.marketPrice;
+  switch (condition) {
+    case 'near-mint':
+      return card.prices.market ?? card.prices.high ?? card.marketPrice;
+    case 'lightly-played':
+      return card.prices.mid ?? card.marketPrice;
+    case 'moderately-played':
+      return card.prices.low ?? card.marketPrice;
   }
 }
 
@@ -48,10 +67,11 @@ interface ChecklistProps {
 export function Checklist({ cards, setName }: ChecklistProps) {
   const [checkedCards, setCheckedCards] = useKV<string[]>(`checklist-${setName}`, []);
   const [checklistSort, setChecklistSort] = useState<ChecklistSortOrder>('default');
+  const [condition, setCondition] = useState<CardCondition>('near-mint');
 
   const sortedCards = useMemo(
-    () => sortChecklist(cards, checklistSort),
-    [cards, checklistSort]
+    () => sortChecklist(cards, checklistSort, (card) => getPriceForCondition(card, condition) ?? 0),
+    [cards, checklistSort, condition]
   );
 
   const isChecked = (cardId: string) => checkedCards?.includes(cardId) || false;
@@ -109,14 +129,14 @@ export function Checklist({ cards, setName }: ChecklistProps) {
   const progressPercent = totalCount > 0 ? Math.round((checkedCount / totalCount) * 100) : 0;
 
   const totalValue = useMemo(() => {
-    return cards.reduce((sum, card) => sum + (card.marketPrice || 0), 0);
-  }, [cards]);
+    return cards.reduce((sum, card) => sum + (getPriceForCondition(card, condition) || 0), 0);
+  }, [cards, condition]);
 
   const checkedValue = useMemo(() => {
     return cards
       .filter(card => isChecked(card.id))
-      .reduce((sum, card) => sum + (card.marketPrice || 0), 0);
-  }, [cards, checkedCards]);
+      .reduce((sum, card) => sum + (getPriceForCondition(card, condition) || 0), 0);
+  }, [cards, checkedCards, condition]);
 
   const remainingValue = totalValue - checkedValue;
 
@@ -132,6 +152,18 @@ export function Checklist({ cards, setName }: ChecklistProps) {
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
+              <Select value={condition} onValueChange={(v) => setCondition(v as CardCondition)}>
+                <SelectTrigger aria-label="Card condition" className="h-9 gap-1" size="default">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent align="end">
+                  {(Object.keys(CONDITION_LABELS) as CardCondition[]).map((key) => (
+                    <SelectItem key={key} value={key}>
+                      {CONDITION_LABELS[key]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="gap-2">
@@ -298,8 +330,10 @@ export function Checklist({ cards, setName }: ChecklistProps) {
                         {card.rarity}
                       </span>
                       
-                      {card.marketPrice && (
-                        card.tcgPlayerUrl ? (
+                      {(() => {
+                        const displayPrice = getPriceForCondition(card, condition);
+                        if (displayPrice == null || !Number.isFinite(displayPrice)) return null;
+                        return card.tcgPlayerUrl ? (
                           <a
                             href={card.tcgPlayerUrl}
                             target="_blank"
@@ -307,16 +341,16 @@ export function Checklist({ cards, setName }: ChecklistProps) {
                             onClick={(e) => e.stopPropagation()}
                           >
                             <Badge variant="outline" className="text-xs font-mono hover:bg-accent/10 cursor-pointer">
-                              ${card.marketPrice.toFixed(2)}
+                              ${displayPrice.toFixed(2)}
                               <span className="ml-1 text-muted-foreground font-sans">TCGPlayer</span>
                             </Badge>
                           </a>
                         ) : (
                           <Badge variant="outline" className="text-xs font-mono">
-                            ${card.marketPrice.toFixed(2)}
+                            ${displayPrice.toFixed(2)}
                           </Badge>
-                        )
-                      )}
+                        );
+                      })()}
                     </div>
                   </div>
 
@@ -350,9 +384,11 @@ export function Checklist({ cards, setName }: ChecklistProps) {
                 {card.rarity}
               </div>
             </div>
-            {card.marketPrice && (
-              <span className="card-price">${card.marketPrice.toFixed(2)}</span>
-            )}
+            {(() => {
+              const printPrice = getPriceForCondition(card, condition);
+              if (printPrice == null || !Number.isFinite(printPrice)) return null;
+              return <span className="card-price">${printPrice.toFixed(2)}</span>;
+            })()}
           </div>
         );
       })}
