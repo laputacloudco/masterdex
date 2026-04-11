@@ -384,9 +384,11 @@ export function Checklist({ cards, setName }: ChecklistProps) {
                 {card.rarity}
               </div>
             </div>
-            {card.marketPrice && (
-              <span className="card-price">${card.marketPrice.toFixed(2)}</span>
-            )}
+            {(() => {
+              const printPrice = getPriceForCondition(card, condition);
+              if (printPrice == null || !Number.isFinite(printPrice)) return null;
+              return <span className="card-price">${printPrice.toFixed(2)}</span>;
+            })()}
           </div>
         );
       })}
