@@ -49,6 +49,40 @@
 - Price history charts
 - Community leaderboard (opt-in)
 
+## Monetization
+
+### Model: Freemium (generous free tier + Pro for power features)
+
+The core planning experience stays free and open source — that's the growth engine. Premium features target power users who get enough value to pay.
+
+**Free (always):**
+- Pokemon/set search, variant filters, sort modes, evolution chains
+- Checklist with progress tracking
+- Cameo database browsing
+- Basic text checklist PDF export
+- Saved setlists (localStorage)
+- Offline support
+
+**Pro (~$3-5/month or ~$30/year):**
+- **Proxy placeholder sheets** — printable 9-pocket pages with grayscale card images positioned for binder sleeves. Free tier gets text-only placeholders.
+- **Visual binder preview** — interactive 9-pocket grid view showing your collection as it would appear in a physical binder.
+- **"What do I still need" buy list** — filtered list of uncollected cards with TCGPlayer links and total cost estimate by condition.
+- **CSV/data export** — export full checklist with prices, ownership, metadata.
+- **Collection value analytics** — total value, value by variant type, value breakdown by set, remaining spend estimate.
+- **Multiple saved collections** — free tier allows 3 saved setlists, Pro unlimited.
+- **Priority cameo submissions** — contributed cameos reviewed and merged faster.
+
+### Revenue alternatives to explore
+- **Affiliate links** — TCGPlayer affiliate program pays ~5% on purchases made through referral links. Every card in the checklist already links to TCGPlayer. This is passive and doesn't gate features.
+- **Sponsored content** — partner with binder/sleeve manufacturers (Vault X, Ultra Pro) to recommend products alongside the binder page calculator. "You need a 360-pocket binder — here's our pick."
+- **One-time purchases** — sell individual printable binder page sets per expansion ($1-2 per set, similar to PokeBinder's model).
+- **Donations/tips** — Ko-fi or GitHub Sponsors for users who want to support development without a subscription.
+
+### Implementation notes
+- Payment: Stripe Checkout or Lemon Squeezy (no backend needed — verify subscription via JWT token stored client-side after checkout)
+- Gating: check subscription status before allowing Pro exports/views. Core search/checklist never gated.
+- Open source compatibility: Pro features can live in the same repo but gate on a license key. The code is open but the service has value-add.
+
 ## Architecture
 
 See .github/copilot-instructions.md for technical architecture, conventions, and build commands.
