@@ -409,11 +409,22 @@ export async function fetchCardsForArtist(artistName: string): Promise<PokemonCa
 export async function searchArtists(query: string): Promise<string[]> {
   if (!query || query.length < 3) return [];
 
-  const cacheKey = `tcg:artist-search:${query.toLowerCase()}`;
+  // Normalize whitespace: trim edges and collapse internal runs to a single space.
+  const normalized = query.trim().replace(/\s+/g, ' ');
+  if (normalized.length < 3) return [];
+
+  const cacheKey = `tcg:artist-search:${normalized.toLowerCase()}`;
   const cached = await cacheGet<string[]>(cacheKey);
   if (cached) return cached;
 
-  const url = `${API_BASE_URL}/cards?q=artist:"${encodeURIComponent(query)}*"&pageSize=100&select=artist`;
+  // Lucene (used by the TCG API) does not support wildcards inside phrase queries.
+  // For multi-word queries use an exact phrase match; for single-word queries append a wildcard.
+  // Escape Lucene reserved characters in user input before building the query.
+  const hasSpace = normalized.includes(' ');
+  const artistQuery = hasSpace
+    ? `artist:"${normalized.replace(/[\\"]/g, '\\$&')}"`
+    : `artist:${normalized.replace(/[\\+\-!(){}[\]^"~*?:/]/g, '\\$&')}*`;
+  const url = `${API_BASE_URL}/cards?q=${encodeURIComponent(artistQuery)}&pageSize=100&select=artist`;
   const json = await scheduledFetchJson<{ data?: TCGCard[] }>(url);
   const artists = [...new Set(
     (json.data || [])
