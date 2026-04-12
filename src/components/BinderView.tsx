@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useKV } from '@/hooks/useKV';
 import type { PokemonCard } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,13 +23,13 @@ function useIsMobile() {
     typeof window !== 'undefined' ? window.innerWidth < 640 : false
   );
 
-  useState(() => {
+  useEffect(() => {
     if (typeof window === 'undefined') return;
     const mq = window.matchMedia('(max-width: 639px)');
     const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
-  });
+  }, []);
 
   return isMobile;
 }
@@ -49,15 +49,19 @@ export function BinderView({ cards, setName }: BinderViewProps) {
   );
 
   // Clamp page if card count changes
-  const safePage = Math.min(currentPage, totalPages - 1);
-  if (safePage !== currentPage) {
-    setCurrentPage(safePage);
-  }
+  useEffect(() => {
+    const safePage = Math.min(currentPage, totalPages - 1);
+    if (safePage !== currentPage) {
+      setCurrentPage(safePage);
+    }
+  }, [currentPage, totalPages]);
+
+  const effectivePage = Math.min(currentPage, totalPages - 1);
 
   const pageCards = useMemo(() => {
-    const start = safePage * cardsPerPage;
+    const start = effectivePage * cardsPerPage;
     return cards.slice(start, start + cardsPerPage);
-  }, [cards, safePage, cardsPerPage]);
+  }, [cards, effectivePage, cardsPerPage]);
 
   const isChecked = (cardId: string) => checkedCards?.includes(cardId) || false;
 
@@ -74,19 +78,19 @@ export function BinderView({ cards, setName }: BinderViewProps) {
               variant="outline"
               size="icon"
               onClick={goToPrevious}
-              disabled={safePage === 0}
+              disabled={effectivePage === 0}
               aria-label="Previous page"
             >
               <CaretLeft weight="bold" />
             </Button>
             <span className="text-sm text-muted-foreground whitespace-nowrap min-w-[100px] text-center">
-              Page {safePage + 1} of {totalPages}
+              Page {effectivePage + 1} of {totalPages}
             </span>
             <Button
               variant="outline"
               size="icon"
               onClick={goToNext}
-              disabled={safePage >= totalPages - 1}
+              disabled={effectivePage >= totalPages - 1}
               aria-label="Next page"
             >
               <CaretRight weight="bold" />
@@ -179,19 +183,19 @@ export function BinderView({ cards, setName }: BinderViewProps) {
             variant="outline"
             size="sm"
             onClick={goToPrevious}
-            disabled={safePage === 0}
+            disabled={effectivePage === 0}
           >
             <CaretLeft weight="bold" className="mr-1" />
             Previous
           </Button>
           <span className="text-sm text-muted-foreground">
-            Page {safePage + 1} of {totalPages}
+            Page {effectivePage + 1} of {totalPages}
           </span>
           <Button
             variant="outline"
             size="sm"
             onClick={goToNext}
-            disabled={safePage >= totalPages - 1}
+            disabled={effectivePage >= totalPages - 1}
           >
             Next
             <CaretRight weight="bold" className="ml-1" />
