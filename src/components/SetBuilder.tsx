@@ -28,6 +28,7 @@ interface SetBuilderProps {
   setUniqueArtOnly?: (value: boolean) => void;
   isLoading: boolean;
   cardCount: number;
+  missingVariantData?: boolean;
   onViewChecklist?: () => void;
 }
 
@@ -60,6 +61,7 @@ export function SetBuilder({
   setUniqueArtOnly,
   isLoading,
   cardCount,
+  missingVariantData,
   onViewChecklist,
 }: SetBuilderProps) {
   const currentMasterSetType = masterSetType || 'pokemon-collection';
@@ -541,6 +543,12 @@ export function SetBuilder({
                 {cardCount} cards loaded — view checklist →
               </Badge>
             </div>
+            {missingVariantData && (
+              <p className="text-xs text-muted-foreground text-center mt-3">
+                ⚠ Variant data (reverse holo, etc.) is not yet available for this set from TCGPlayer.
+                Only one entry per card number is shown. Variants will appear as pricing data becomes available.
+              </p>
+            )}
           </CardContent>
         </Card>
       )}
