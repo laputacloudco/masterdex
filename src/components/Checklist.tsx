@@ -401,6 +401,7 @@ export function Checklist({ cards, setName }: ChecklistProps) {
                       <img
                         src={card.imageUrl}
                         alt={card.name}
+                        loading="lazy"
                         className="w-full h-auto object-cover"
                         onClick={() => setPreviewCard(card)}
                       />
@@ -448,6 +449,7 @@ export function Checklist({ cards, setName }: ChecklistProps) {
     {/* Large image preview dialog */}
     <Dialog open={previewCard !== null} onOpenChange={(open) => { if (!open) setPreviewCard(null); }}>
       <DialogContent className="max-w-sm p-2 sm:max-w-md">
+        <DialogTitle className="sr-only">{previewCard ? formatCardName(previewCard) : 'Card Preview'}</DialogTitle>
         {previewCard && (
           <div className="flex flex-col items-center gap-2">
             {previewCard.largeImageUrl || previewCard.imageUrl ? (
