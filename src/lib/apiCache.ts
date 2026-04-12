@@ -81,3 +81,25 @@ export async function cacheClear(): Promise<void> {
     memoryCache.clear();
   }
 }
+
+export async function cacheDeleteByPrefix(prefix: string): Promise<void> {
+  try {
+    const db = await getDB();
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    let cursor = await store.openCursor();
+    while (cursor) {
+      if (typeof cursor.key === 'string' && cursor.key.startsWith(prefix)) {
+        await cursor.delete();
+      }
+      cursor = await cursor.continue();
+    }
+    await tx.done;
+  } catch {
+    for (const key of memoryCache.keys()) {
+      if (key.startsWith(prefix)) {
+        memoryCache.delete(key);
+      }
+    }
+  }
+}

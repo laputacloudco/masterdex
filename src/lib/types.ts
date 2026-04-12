@@ -42,6 +42,10 @@ export interface PokemonCard {
     high?: number;
   };
   tcgPlayerUrl?: string;
+  artist?: string;
+  supertype?: string;
+  subtypes?: string[];
+  nationalDexNumber?: number;
 }
 
 export interface PokemonSet {
@@ -49,6 +53,9 @@ export interface PokemonSet {
   name: string;
   releaseDate: string;
   totalCards: number;
+  series?: string;
+  symbolUrl?: string;
+  logoUrl?: string;
 }
 
 export interface PokemonSpecies {
@@ -69,6 +76,7 @@ export interface SavedSetlist {
   cardCount: number;
   createdAt: string;
   updatedAt: string;
+  checkedCardIds?: string[];
 }
 
 export interface ChecklistItem {

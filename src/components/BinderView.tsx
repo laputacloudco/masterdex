@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useKV } from '@/hooks/useKV';
+import { useCheckedCards } from '@/hooks/useCheckedCards';
 import type { PokemonCard } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,7 +36,7 @@ function useIsMobile() {
 }
 
 export function BinderView({ cards, setName, storageKey }: BinderViewProps) {
-  const [checkedCards] = useKV<string[]>(`checklist-${storageKey || setName}`, []);
+  const { isChecked } = useCheckedCards(storageKey || setName);
   const [currentPage, setCurrentPage] = useState(0);
   const isMobile = useIsMobile();
 
@@ -63,8 +63,6 @@ export function BinderView({ cards, setName, storageKey }: BinderViewProps) {
     const start = effectivePage * cardsPerPage;
     return cards.slice(start, start + cardsPerPage);
   }, [cards, effectivePage, cardsPerPage]);
-
-  const isChecked = (cardId: string) => checkedCards?.includes(cardId) || false;
 
   const goToPrevious = () => setCurrentPage((p) => Math.max(0, p - 1));
   const goToNext = () => setCurrentPage((p) => Math.min(totalPages - 1, p + 1));

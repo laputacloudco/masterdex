@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useKV } from '@/hooks/useKV';
+import { useCheckedCards } from '@/hooks/useCheckedCards';
 import type { CardCondition, PokemonCard } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -69,7 +69,7 @@ interface ChecklistProps {
 }
 
 export function Checklist({ cards, setName, storageKey }: ChecklistProps) {
-  const [checkedCards, setCheckedCards] = useKV<string[]>(`checklist-${storageKey || setName}`, []);
+  const { checkedCardIds, isChecked, toggle: toggleCheck, checkedCount } = useCheckedCards(storageKey || setName);
   const [checklistSort, setChecklistSort] = useState<ChecklistSortOrder>('default');
   const [condition, setCondition] = useState<CardCondition>('near-mint');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
@@ -79,17 +79,6 @@ export function Checklist({ cards, setName, storageKey }: ChecklistProps) {
     () => sortChecklist(cards, checklistSort, (card) => getPriceForCondition(card, condition) ?? 0),
     [cards, checklistSort, condition]
   );
-
-  const isChecked = (cardId: string) => checkedCards?.includes(cardId) || false;
-
-  const toggleCheck = (cardId: string) => {
-    setCheckedCards((current) => {
-      if (!current) return [cardId];
-      return current.includes(cardId)
-        ? current.filter(id => id !== cardId)
-        : [...current, cardId];
-    });
-  };
 
   const handleExportPDF = async () => {
     try {
@@ -131,11 +120,10 @@ export function Checklist({ cards, setName, storageKey }: ChecklistProps) {
   };
 
   const handleExportCSV = () => {
-    exportChecklistToCSV(cards, checkedCards || [], setName);
+    exportChecklistToCSV(cards, checkedCardIds, setName);
     toast.success('Checklist exported to CSV!');
   };
 
-  const checkedCount = checkedCards?.length || 0;
   const totalCount = cards.length;
   const progressPercent = totalCount > 0 ? Math.round((checkedCount / totalCount) * 100) : 0;
 
@@ -147,7 +135,7 @@ export function Checklist({ cards, setName, storageKey }: ChecklistProps) {
     return cards
       .filter(card => isChecked(card.id))
       .reduce((sum, card) => sum + (getPriceForCondition(card, condition) || 0), 0);
-  }, [cards, checkedCards, condition]);
+  }, [cards, isChecked, condition]);
 
   const remainingValue = totalValue - checkedValue;
 
