@@ -221,6 +221,11 @@ function App() {
 
   const canViewChecklist = cards.length > 0;
 
+  // Detect when variant expansion data is unavailable (no TCGPlayer pricing)
+  const cardsWithoutVariantData = cards.filter(c => !c.prices && !c.artVariant);
+  const missingVariantData = canViewChecklist && !(uniqueArtOnly ?? false) &&
+    cardsWithoutVariantData.length > cards.length * 0.5;
+
   return (
     <div className="min-h-screen bg-background">
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,var(--gradient-start),transparent_50%),radial-gradient(ellipse_at_bottom_right,var(--gradient-end),transparent_50%)]" />
@@ -287,6 +292,7 @@ function App() {
                   setUniqueArtOnly={setUniqueArtOnly}
                   isLoading={isLoading}
                   cardCount={cards.length}
+                  missingVariantData={missingVariantData}
                   onViewChecklist={() => setActiveTab('checklist')}
                 />
               </div>
