@@ -11,9 +11,8 @@ const MAX_RETRIES = 3;
 
 let activeRequests = 0;
 const queue: QueuedRequest[] = [];
-// Cache the response body as cloneable data, not the raw Response object.
-// Multiple callers of the same URL each get their own Response via clone().
-const inflightRequests = new Map<string, Promise<Response>>();
+// Dedup by caching parsed JSON, not raw Response (Response body can only be read once)
+const inflightJsonRequests = new Map<string, Promise<unknown>>();
 
 function processQueue() {
   while (activeRequests < MAX_CONCURRENT && queue.length > 0) {
@@ -35,7 +34,6 @@ async function executeRequest(request: QueuedRequest) {
     request.reject(error);
   } finally {
     activeRequests--;
-    inflightRequests.delete(request.url);
     processQueue();
   }
 }
@@ -80,21 +78,37 @@ function sleep(ms: number): Promise<void> {
 }
 
 /**
- * Scheduled fetch with concurrency control, retry, and request deduplication.
- * Deduped callers each get a cloned Response so .json() can be called by each.
+ * Scheduled JSON fetch with concurrency control, retry, and request deduplication.
+ * Returns parsed JSON. Deduped callers share the same parsed result (no body consumption issues).
+ */
+export async function scheduledFetchJson<T = unknown>(url: string, signal?: AbortSignal): Promise<T> {
+  const existing = inflightJsonRequests.get(url);
+  if (existing) return existing as Promise<T>;
+
+  const promise = (async () => {
+    const response = await new Promise<Response>((resolve, reject) => {
+      queue.push({ url, resolve, reject, signal });
+      processQueue();
+    });
+    return await response.json();
+  })();
+
+  inflightJsonRequests.set(url, promise);
+
+  try {
+    return await promise as T;
+  } finally {
+    inflightJsonRequests.delete(url);
+  }
+}
+
+/**
+ * Scheduled fetch returning raw Response (no deduplication — use scheduledFetchJson instead
+ * when you need JSON, which is the common case).
  */
 export function scheduledFetch(url: string, signal?: AbortSignal): Promise<Response> {
-  const existing = inflightRequests.get(url);
-  if (existing) {
-    // Return a clone so each caller can independently consume the body
-    return existing.then(r => r.clone());
-  }
-
-  const promise = new Promise<Response>((resolve, reject) => {
+  return new Promise<Response>((resolve, reject) => {
     queue.push({ url, resolve, reject, signal });
     processQueue();
   });
-
-  inflightRequests.set(url, promise);
-  return promise;
 }

@@ -1,5 +1,5 @@
 import { cacheGet, cacheSet, CACHE_TTL } from './apiCache';
-import { scheduledFetch } from './requestScheduler';
+import { scheduledFetchJson } from './requestScheduler';
 
 const POKEAPI_BASE = 'https://pokeapi.co/api/v2';
 
@@ -50,8 +50,9 @@ export async function loadSpeciesIndex(): Promise<Map<string, PokeSpecies>> {
     return speciesIndex;
   }
 
-  const response = await scheduledFetch(`${POKEAPI_BASE}/pokemon-species?limit=2000`);
-  const data = await response.json();
+  const data = await scheduledFetchJson<{ results: PokeApiSpeciesListItem[] }>(
+    `${POKEAPI_BASE}/pokemon-species?limit=2000`
+  );
   const list: PokeApiSpeciesListItem[] = data.results;
 
   // Build index from the list (we get slug + dex number from the URL)
@@ -188,16 +189,12 @@ export async function getEvolutionChain(pokemonName: string): Promise<string[]> 
   if (cached) return cached;
 
   try {
-    // Fetch species detail to get evolution chain URL
-    const speciesResponse = await scheduledFetch(
+    const speciesData = await scheduledFetchJson<PokeApiSpeciesDetail>(
       `${POKEAPI_BASE}/pokemon-species/${species.id}/`
     );
-    const speciesData: PokeApiSpeciesDetail = await speciesResponse.json();
     const chainUrl = speciesData.evolution_chain.url;
 
-    // Fetch the evolution chain
-    const chainResponse = await scheduledFetch(chainUrl);
-    const chainData = await chainResponse.json();
+    const chainData = await scheduledFetchJson<{ chain: PokeApiChainLink }>(chainUrl);
 
     // Walk the chain and collect all species in order
     const chain = flattenChain(chainData.chain);
