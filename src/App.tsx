@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { SavedSetlist } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogPortal, DialogOverlay, DialogTitle } from '@/components/ui/dialog';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { SetBuilder } from '@/components/SetBuilder';
 import { Checklist } from '@/components/Checklist';
 import { SavedSetlists } from '@/components/SavedSetlists';
@@ -187,24 +188,26 @@ function App() {
         </div>
       )}
 
-      {/* Show Mode full-screen dialog */}
+      {/* Show Mode full-screen overlay */}
       <Dialog open={showModeOpen} onOpenChange={setShowModeOpen}>
-        <DialogContent
-          className="inset-0 top-0 left-0 translate-x-0 translate-y-0 max-w-none sm:max-w-none w-full h-full max-h-full rounded-none border-none p-0 gap-0 overflow-y-auto"
-          hideCloseButton
-          onInteractOutside={(e) => e.preventDefault()}
-          onEscapeKeyDown={(e) => e.preventDefault()}
-        >
-          <DialogTitle className="sr-only">Show Mode — {checklistName}</DialogTitle>
-          <div className="px-3 pt-3 pb-8 sm:px-4 sm:pt-4">
-            <ShowView
-              cards={cards}
-              setName={checklistName}
-              storageKey={checklistKey}
-              onClose={() => setShowModeOpen(false)}
-            />
-          </div>
-        </DialogContent>
+        <DialogPortal>
+          <DialogOverlay />
+          <DialogPrimitive.Content
+            className="fixed inset-0 z-50 bg-background overflow-y-auto"
+            onInteractOutside={(e) => e.preventDefault()}
+            onEscapeKeyDown={(e) => e.preventDefault()}
+          >
+            <DialogTitle className="sr-only">Show Mode — {checklistName}</DialogTitle>
+            <div className="px-3 pt-3 pb-8 sm:px-4 sm:pt-4">
+              <ShowView
+                cards={cards}
+                setName={checklistName}
+                storageKey={checklistKey}
+                onClose={() => setShowModeOpen(false)}
+              />
+            </div>
+          </DialogPrimitive.Content>
+        </DialogPortal>
       </Dialog>
 
       <Footer />
