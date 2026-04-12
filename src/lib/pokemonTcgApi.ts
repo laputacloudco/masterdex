@@ -156,25 +156,38 @@ export async function mapTCGCardToCards(tcgCard: TCGCard, pokemonDisplayName?: s
     }];
   }
 
-  // Expand into one entry per price type variant
-  return tcgPriceTypes.map(([priceType, priceData]) => ({
-    id: `${tcgCard.id}-${priceType}`,
-    name: tcgCard.name,
-    pokemonName: resolvedName,
-    setName: tcgCard.set.name,
-    setCode: tcgCard.set.id,
-    setNumber: `${tcgCard.number}/${tcgCard.set.printedTotal || tcgCard.set.total}`,
-    releaseDate: tcgCard.set.releaseDate,
-    variant: priceTypeToVariant(priceType),
-    artVariant: priceTypeLabel(priceType),
-    rarity: tcgCard.rarity || 'Common',
-    isHolo: priceType !== 'normal' && priceType !== '1stEditionNormal',
-    imageUrl: tcgCard.images.small,
-    largeImageUrl: tcgCard.images.large,
-    marketPrice: priceData?.market ?? priceData?.mid,
-    prices: { low: priceData?.low, mid: priceData?.mid, market: priceData?.market, high: priceData?.high },
-    tcgPlayerUrl: tcgCard.tcgplayer?.url,
-  }));
+  // Expand into one entry per price type variant.
+  // Preserve the semantic variant from mapVariant() (promo, collab, etc.)
+  // and layer on the physical variant (holo/reverse-holo) as artVariant.
+  const baseVariant = mapVariant(tcgCard);
+
+  return tcgPriceTypes.map(([priceType, priceData]) => {
+    const physicalVariant = priceTypeToVariant(priceType);
+    // Use the semantic variant (promo, collab, etc.) if it's more specific than normal/holo.
+    // Only use the physical variant when the card is otherwise just normal/holo.
+    const variant = (baseVariant !== 'normal' && baseVariant !== 'holo')
+      ? baseVariant
+      : physicalVariant;
+
+    return {
+      id: `${tcgCard.id}-${priceType}`,
+      name: tcgCard.name,
+      pokemonName: resolvedName,
+      setName: tcgCard.set.name,
+      setCode: tcgCard.set.id,
+      setNumber: `${tcgCard.number}/${tcgCard.set.printedTotal || tcgCard.set.total}`,
+      releaseDate: tcgCard.set.releaseDate,
+      variant,
+      artVariant: priceTypeLabel(priceType),
+      rarity: tcgCard.rarity || 'Common',
+      isHolo: priceType !== 'normal' && priceType !== '1stEditionNormal',
+      imageUrl: tcgCard.images.small,
+      largeImageUrl: tcgCard.images.large,
+      marketPrice: priceData?.market ?? priceData?.mid,
+      prices: { low: priceData?.low, mid: priceData?.mid, market: priceData?.market, high: priceData?.high },
+      tcgPlayerUrl: tcgCard.tcgplayer?.url,
+    };
+  });
 }
 
 export function mapTCGSetToSet(tcgSet: TCGSet): PokemonSet {
