@@ -267,14 +267,14 @@ function App() {
               <div className="max-w-4xl mx-auto space-y-6">
                 <Checklist cards={cards} setName={checklistName} />
                 <VariantStatistics cards={cards} />
-                <BinderCalculator cardCount={cards.length} />
               </div>
             )}
           </TabsContent>
 
           <TabsContent value="binder" className="mt-4 sm:mt-8">
             {canViewChecklist && (
-              <div className="max-w-4xl mx-auto">
+              <div className="max-w-4xl mx-auto space-y-6">
+                <BinderCalculator cardCount={cards.length} />
                 <BinderView cards={cards} setName={checklistName} />
               </div>
             )}
