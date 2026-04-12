@@ -205,33 +205,33 @@ export function ShowView({ cards, setName, storageKey, onClose }: ShowViewProps)
     <>
       <div className="max-w-2xl mx-auto">
         {/* Sticky header */}
-        <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm pb-3 space-y-3">
+        <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm pb-2 sm:pb-3 space-y-2 sm:space-y-3">
           {/* Title + progress */}
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 min-w-0">
               {onClose && (
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={onClose}
-                  className="shrink-0 -ml-2"
+                  className="shrink-0 -ml-1 h-9 w-9"
                   aria-label="Exit show mode"
                 >
                   <X size={20} weight="bold" />
                 </Button>
               )}
-              <div>
-                <h2 className="text-lg font-bold flex items-center gap-2">
-                  <Lightning weight="fill" className="text-yellow-500" size={22} />
+              <div className="min-w-0">
+                <h2 className="text-base sm:text-lg font-bold flex items-center gap-1.5">
+                  <Lightning weight="fill" className="text-yellow-500 shrink-0" size={20} />
                   Show Mode
                 </h2>
-                <p className="text-xs text-muted-foreground">{setName}</p>
+                <p className="text-xs text-muted-foreground truncate">{setName}</p>
               </div>
             </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold tabular-nums">
+            <div className="text-right shrink-0">
+              <div className="text-xl sm:text-2xl font-bold tabular-nums">
                 <span className="text-destructive">{missingCount}</span>
-                <span className="text-muted-foreground text-base font-normal"> remaining</span>
+                <span className="text-muted-foreground text-sm sm:text-base font-normal"> left</span>
               </div>
               <div className="text-xs text-muted-foreground tabular-nums">
                 {ownedCount}/{totalCards} ({progressPercent}%)
@@ -263,9 +263,9 @@ export function ShowView({ cards, setName, storageKey, onClose }: ShowViewProps)
           )}
 
           {/* Cost + condition */}
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5 text-sm">
-              <CurrencyDollar size={16} className="text-muted-foreground" />
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 text-xs sm:text-sm">
+              <CurrencyDollar size={14} className="text-muted-foreground shrink-0" />
               <span className="text-muted-foreground">To complete:</span>
               <span className="font-semibold tabular-nums">${missingTotalCost.toFixed(2)}</span>
             </div>
@@ -380,7 +380,7 @@ export function ShowView({ cards, setName, storageKey, onClose }: ShowViewProps)
               return (
                 <div
                   key={card.id}
-                  className={`flex items-center gap-3 p-2.5 rounded-lg border transition-all duration-300 ${
+                  className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 rounded-lg border transition-all duration-300 ${
                     isCelebrating
                       ? 'bg-green-500/10 border-green-500/50 scale-[0.97] opacity-50'
                       : 'hover:bg-accent/5 hover:border-accent/30'
@@ -398,10 +398,10 @@ export function ShowView({ cards, setName, storageKey, onClose }: ShowViewProps)
                         <img
                           src={card.imageUrl}
                           alt={card.name}
-                          className="w-12 h-[67px] object-cover rounded border cursor-pointer"
+                          className="w-10 h-[56px] sm:w-12 sm:h-[67px] object-cover rounded border cursor-pointer"
                         />
                       ) : (
-                        <div className="w-12 h-[67px] bg-muted rounded border flex items-center justify-center text-[8px] text-muted-foreground cursor-pointer">
+                        <div className="w-10 h-[56px] sm:w-12 sm:h-[67px] bg-muted rounded border flex items-center justify-center text-[8px] text-muted-foreground cursor-pointer">
                           ?
                         </div>
                       )}
