@@ -11,7 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Printer, CheckCircle, CurrencyDollar, FilePdf, CaretDown, Cards, UserCircle, ArrowsDownUp } from '@phosphor-icons/react';
 import { formatCardName, getVariantLabel } from '@/lib/cardUtils';
 import { CardPreview } from './CardPreview';
-import { exportChecklistToPDF, exportPlaceholdersToPDF, printChecklist } from '@/lib/exportUtils';
+import { exportChecklistToPDF, exportPlaceholdersToPDF, exportChecklistToCSV, printChecklist } from '@/lib/exportUtils';
 import { toast } from 'sonner';
 
 type ChecklistSortOrder = 'default' | 'price-high-low' | 'price-low-high' | 'name-a-z' | 'name-z-a';
@@ -124,6 +124,11 @@ export function Checklist({ cards, setName }: ChecklistProps) {
     printChecklist();
   };
 
+  const handleExportCSV = () => {
+    exportChecklistToCSV(cards, checkedCards || [], setName);
+    toast.success('Checklist exported to CSV!');
+  };
+
   const checkedCount = checkedCards?.length || 0;
   const totalCount = cards.length;
   const progressPercent = totalCount > 0 ? Math.round((checkedCount / totalCount) * 100) : 0;
@@ -200,6 +205,10 @@ export function Checklist({ cards, setName }: ChecklistProps) {
                 <DropdownMenuItem onClick={handleExportPDF}>
                   <FilePdf className="mr-2" />
                   Export Checklist PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportCSV}>
+                  <FilePdf className="mr-2" />
+                  Export Checklist CSV
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleExportProxies}>
