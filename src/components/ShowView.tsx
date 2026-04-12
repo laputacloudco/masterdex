@@ -49,9 +49,10 @@ interface ShowViewProps {
   cards: PokemonCard[];
   setName: string;
   storageKey?: string;
+  onClose?: () => void;
 }
 
-export function ShowView({ cards, setName, storageKey }: ShowViewProps) {
+export function ShowView({ cards, setName, storageKey, onClose }: ShowViewProps) {
   const { isChecked, toggle } = useCheckedCards(storageKey || setName);
   const [search, setSearch] = useState('');
   const [setFilter, setSetFilter] = useState<string | null>(null);
@@ -207,12 +208,25 @@ export function ShowView({ cards, setName, storageKey }: ShowViewProps) {
         <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm pb-3 space-y-3">
           {/* Title + progress */}
           <div className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-bold flex items-center gap-2">
-                <Lightning weight="fill" className="text-yellow-500" size={22} />
-                Show Mode
-              </h2>
-              <p className="text-xs text-muted-foreground">{setName}</p>
+            <div className="flex items-center gap-2">
+              {onClose && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onClose}
+                  className="shrink-0 -ml-2"
+                  aria-label="Exit show mode"
+                >
+                  <X size={20} weight="bold" />
+                </Button>
+              )}
+              <div>
+                <h2 className="text-lg font-bold flex items-center gap-2">
+                  <Lightning weight="fill" className="text-yellow-500" size={22} />
+                  Show Mode
+                </h2>
+                <p className="text-xs text-muted-foreground">{setName}</p>
+              </div>
             </div>
             <div className="text-right">
               <div className="text-2xl font-bold tabular-nums">
