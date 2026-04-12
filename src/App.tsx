@@ -28,6 +28,7 @@ function App() {
   } = useCollectionState();
 
   const [activeTab, setActiveTab] = useState('builder');
+  const [binderCardsPerPage, setBinderCardsPerPage] = useState(9);
 
   const handleLoadSetlist = (setlist: SavedSetlist) => {
     loadSetlist(setlist);
@@ -119,8 +120,8 @@ function App() {
           <TabsContent value="binder" className="mt-4 sm:mt-8">
             {canViewChecklist && (
               <div className="max-w-4xl mx-auto space-y-6">
-                <BinderCalculator cardCount={cards.length} />
-                <BinderView cards={cards} setName={checklistName} storageKey={checklistKey} />
+                <BinderCalculator cardCount={cards.length} cardsPerPage={binderCardsPerPage} onCardsPerPageChange={setBinderCardsPerPage} />
+                <BinderView cards={cards} setName={checklistName} storageKey={checklistKey} cardsPerPage={binderCardsPerPage} />
               </div>
             )}
           </TabsContent>

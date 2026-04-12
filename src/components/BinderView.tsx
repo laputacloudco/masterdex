@@ -12,12 +12,21 @@ interface BinderViewProps {
   cards: PokemonCard[];
   setName: string;
   storageKey?: string;
+  cardsPerPage?: number;
 }
 
 const DESKTOP_COLS = 3;
 const DESKTOP_ROWS = 3;
 const MOBILE_COLS = 2;
 const MOBILE_ROWS = 3;
+
+/** Grid dimensions for each supported cards-per-page value. */
+const PAGE_LAYOUT: Record<number, { cols: number; rows: number }> = {
+  4:  { cols: 2, rows: 2 },
+  9:  { cols: 3, rows: 3 },
+  12: { cols: 3, rows: 4 },
+  16: { cols: 4, rows: 4 },
+};
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(() =>
@@ -35,13 +44,15 @@ function useIsMobile() {
   return isMobile;
 }
 
-export function BinderView({ cards, setName, storageKey }: BinderViewProps) {
+export function BinderView({ cards, setName, storageKey, cardsPerPage: cardsPerPageProp }: BinderViewProps) {
   const { isChecked } = useCheckedCards(storageKey || setName);
   const [currentPage, setCurrentPage] = useState(0);
   const isMobile = useIsMobile();
 
-  const cols = isMobile ? MOBILE_COLS : DESKTOP_COLS;
-  const rows = isMobile ? MOBILE_ROWS : DESKTOP_ROWS;
+  // When a specific layout is requested via prop, use it; otherwise fall back to responsive defaults.
+  const layout = cardsPerPageProp != null ? PAGE_LAYOUT[cardsPerPageProp] : undefined;
+  const cols = layout?.cols ?? (isMobile ? MOBILE_COLS : DESKTOP_COLS);
+  const rows = layout?.rows ?? (isMobile ? MOBILE_ROWS : DESKTOP_ROWS);
   const cardsPerPage = cols * rows;
 
   const totalPages = useMemo(
@@ -100,7 +111,7 @@ export function BinderView({ cards, setName, storageKey }: BinderViewProps) {
 
       <CardContent>
         <div
-          className="grid gap-3 mx-auto max-w-2xl"
+          className={`grid gap-3 mx-auto ${cols >= 4 ? 'max-w-3xl' : 'max-w-2xl'}`}
           style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}
         >
           {Array.from({ length: cardsPerPage }, (_, i) => {
