@@ -150,7 +150,7 @@ function App() {
         </Tabs>
       </div>
       {/* Floating checklist button — mobile only, shown when cards are loaded on the builder tab */}
-      {canViewChecklist && activeTab === 'builder' && (
+      {canViewChecklist && !isLoading && activeTab === 'builder' && (
         <div className="fixed bottom-6 left-0 right-0 flex justify-center z-50 sm:hidden px-4 pointer-events-none">
           <Button
             onClick={() => setActiveTab('checklist')}
