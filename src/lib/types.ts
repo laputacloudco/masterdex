@@ -77,10 +77,10 @@ export interface SavedSetlist {
   selectedTypes?: string[];
   selectedArtists?: string[];
   sortOrder: SortOrder;
+  uniqueArtOnly?: boolean;
   cardCount: number;
   createdAt: string;
   updatedAt: string;
-  checkedCardIds?: string[];
 }
 
 export interface ChecklistItem {

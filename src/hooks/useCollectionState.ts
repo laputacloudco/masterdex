@@ -6,6 +6,8 @@ import { sortCards, sortByEvolutionChainAsync, sortGroupedByPokemonAsync } from 
 import { buildShareUrl, parseShareUrl } from '@/lib/shareUrl';
 import { toast } from 'sonner';
 
+const STORAGE_PREFIX = 'pokomplete:';
+
 const DEFAULT_VARIANT_FILTERS: VariantFilters = {
   normal: true,
   holo: true,
@@ -20,6 +22,52 @@ const DEFAULT_VARIANT_FILTERS: VariantFilters = {
   cameo: true,
 };
 
+/**
+ * Compute the legacy dynamic checklist key from config values.
+ * Used for migration from old per-config keys to per-setlist keys.
+ */
+function computeDynamicChecklistKey(
+  masterSetType: MasterSetType,
+  selectedPokemon: string[],
+  selectedSets: string[],
+  selectedTypes: string[],
+  selectedArtists: string[],
+): string {
+  if (masterSetType === 'official-set' && selectedSets.length > 0)
+    return `set:${[...selectedSets].sort().join(',')}`;
+  if (masterSetType === 'type-collection' && selectedTypes.length > 0)
+    return `type:${[...selectedTypes].sort().join(',')}`;
+  if (masterSetType === 'artist-collection' && selectedArtists.length > 0)
+    return `artist:${[...selectedArtists].sort().join(',')}`;
+  if (selectedPokemon.length > 0)
+    return `pokemon:${[...selectedPokemon].sort().join(',')}`;
+  return 'empty';
+}
+
+/**
+ * Read checked card IDs from localStorage for a given checklist key.
+ */
+function readCheckedCards(checklistKey: string): string[] | null {
+  try {
+    const raw = localStorage.getItem(`${STORAGE_PREFIX}checklist-${checklistKey}`);
+    if (raw === null) return null;
+    return JSON.parse(raw) as string[];
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Write checked card IDs to localStorage for a given checklist key.
+ */
+function writeCheckedCards(checklistKey: string, ids: string[]): void {
+  try {
+    localStorage.setItem(`${STORAGE_PREFIX}checklist-${checklistKey}`, JSON.stringify(ids));
+  } catch (e) {
+    console.warn('Failed to write checked cards', e);
+  }
+}
+
 export function useCollectionState() {
   const [masterSetType, setMasterSetType] = useKV<MasterSetType>('config-type', 'pokemon-collection');
   const [variantFilters, setVariantFilters] = useKV<VariantFilters>('config-variants', DEFAULT_VARIANT_FILTERS);
@@ -30,9 +78,25 @@ export function useCollectionState() {
   const [selectedArtists, setSelectedArtists] = useKV<string[]>('config-artists', []);
   const [uniqueArtOnly, setUniqueArtOnly] = useKV<boolean>('config-unique-art', false);
 
+  // Saved setlists (lifted from SavedSetlists.tsx for centralized management)
+  const [savedSetlists, setSavedSetlists] = useKV<SavedSetlist[]>('saved-setlists', []);
+
+  // Active setlist tracking — persists across page reloads
+  const [activeSetlistId, setActiveSetlistId] = useKV<string | null>('active-setlist-id', null);
+
   const [cards, setCards] = useState<PokemonCard[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const urlApplied = useRef(false);
+
+  // Validate activeSetlistId whenever persisted setlists change: clear if the setlist was deleted
+  useEffect(() => {
+    if (activeSetlistId && savedSetlists) {
+      const exists = savedSetlists.some(s => s.id === activeSetlistId);
+      if (!exists) {
+        setActiveSetlistId(null);
+      }
+    }
+  }, [activeSetlistId, savedSetlists, setActiveSetlistId]);
 
   // On mount, parse URL query params and apply shared config
   useEffect(() => {
@@ -41,6 +105,8 @@ export function useCollectionState() {
 
     const config = parseShareUrl(window.location.search);
     if (config) {
+      // Loading a share URL deactivates any active setlist
+      setActiveSetlistId(null);
       setMasterSetType(config.masterSetType);
       setVariantFilters(config.variantFilters);
       setSortOrder(config.sortOrder);
@@ -198,8 +264,9 @@ export function useCollectionState() {
     fetchCards();
   }, [masterSetType, variantFilters, sortOrder, selectedPokemon, selectedSets, selectedTypes, selectedArtists, uniqueArtOnly]);
 
-  // Load a saved setlist
+  // Load a saved setlist — sets it as the active setlist
   const loadSetlist = useCallback((setlist: SavedSetlist) => {
+    setActiveSetlistId(setlist.id);
     setMasterSetType(setlist.type);
     setVariantFilters(setlist.variantFilters);
     setSortOrder(setlist.sortOrder);
@@ -207,7 +274,115 @@ export function useCollectionState() {
     setSelectedSets(setlist.selectedSets);
     setSelectedTypes(setlist.selectedTypes || []);
     setSelectedArtists(setlist.selectedArtists || []);
-  }, [setMasterSetType, setVariantFilters, setSortOrder, setSelectedPokemon, setSelectedSets, setSelectedTypes, setSelectedArtists]);
+    setUniqueArtOnly(setlist.uniqueArtOnly ?? false);
+
+    // Migrate legacy progress only when the new per-setlist key is truly missing.
+    // An empty array is a valid "all checks cleared" state and must not trigger migration.
+    const setlistKey = `setlist:${setlist.id}`;
+    const rawSetlistProgress =
+      typeof window !== 'undefined'
+        ? window.localStorage.getItem(`${STORAGE_PREFIX}${setlistKey}`)
+        : null;
+    if (rawSetlistProgress === null) {
+      const dynamicKeyBase = computeDynamicChecklistKey(
+        setlist.type,
+        setlist.selectedPokemon,
+        setlist.selectedSets,
+        setlist.selectedTypes || [],
+        setlist.selectedArtists || [],
+      );
+      const dynamicKey = setlist.uniqueArtOnly
+        ? `${dynamicKeyBase}:unique`
+        : dynamicKeyBase;
+      const legacy = readCheckedCards(dynamicKey);
+      if (legacy && legacy.length > 0) {
+        writeCheckedCards(setlistKey, legacy);
+      }
+    }
+  }, [setActiveSetlistId, setMasterSetType, setVariantFilters, setSortOrder, setSelectedPokemon, setSelectedSets, setSelectedTypes, setSelectedArtists, setUniqueArtOnly]);
+
+  // Deactivate the current setlist (start fresh)
+  const deactivateSetlist = useCallback(() => {
+    setActiveSetlistId(null);
+  }, [setActiveSetlistId]);
+
+  // Save a new setlist from the current config
+  const saveSetlist = useCallback((name: string): SavedSetlist | null => {
+    if (!masterSetType) return null;
+
+    const newSetlist: SavedSetlist = {
+      id: `setlist-${Date.now()}`,
+      name,
+      type: masterSetType,
+      variantFilters: variantFilters || DEFAULT_VARIANT_FILTERS,
+      selectedSets: selectedSets || [],
+      selectedPokemon: selectedPokemon || [],
+      selectedTypes: selectedTypes || [],
+      selectedArtists: selectedArtists || [],
+      sortOrder: sortOrder || 'chronological',
+      uniqueArtOnly: uniqueArtOnly ?? false,
+      cardCount: cards.length,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    setSavedSetlists((current) => [...(current || []), newSetlist]);
+
+    // Activate the new setlist and migrate any existing progress
+    setActiveSetlistId(newSetlist.id);
+    const dynamicKeyBase = computeDynamicChecklistKey(
+      newSetlist.type,
+      newSetlist.selectedPokemon,
+      newSetlist.selectedSets,
+      newSetlist.selectedTypes || [],
+      newSetlist.selectedArtists || [],
+    );
+    const dynamicKey = newSetlist.uniqueArtOnly
+      ? `${dynamicKeyBase}:unique`
+      : dynamicKeyBase;
+    const legacy = readCheckedCards(dynamicKey);
+    if (legacy && legacy.length > 0) {
+      writeCheckedCards(`setlist:${newSetlist.id}`, legacy);
+    }
+
+    return newSetlist;
+  }, [masterSetType, variantFilters, selectedSets, selectedPokemon, selectedTypes, selectedArtists, sortOrder, uniqueArtOnly, cards.length, setSavedSetlists, setActiveSetlistId]);
+
+  // Update an existing saved setlist's config (explicit save)
+  const updateSetlist = useCallback((id: string, name?: string) => {
+    setSavedSetlists((current) => (current || []).map(s => {
+      if (s.id !== id) return s;
+      return {
+        ...s,
+        name: name ?? s.name,
+        type: masterSetType || s.type,
+        variantFilters: variantFilters || s.variantFilters,
+        selectedSets: selectedSets || s.selectedSets,
+        selectedPokemon: selectedPokemon || s.selectedPokemon,
+        selectedTypes: selectedTypes || s.selectedTypes,
+        selectedArtists: selectedArtists || s.selectedArtists,
+        sortOrder: sortOrder || s.sortOrder,
+        uniqueArtOnly: uniqueArtOnly ?? s.uniqueArtOnly,
+        cardCount: cards.length,
+        updatedAt: new Date().toISOString(),
+      };
+    }));
+  }, [masterSetType, variantFilters, selectedSets, selectedPokemon, selectedTypes, selectedArtists, sortOrder, uniqueArtOnly, cards.length, setSavedSetlists]);
+
+  // Delete a saved setlist
+  const deleteSetlist = useCallback((id: string) => {
+    setSavedSetlists((current) => (current || []).filter(s => s.id !== id));
+    // If deleting the active setlist, deactivate
+    if (activeSetlistId === id) {
+      setActiveSetlistId(null);
+    }
+    // Clean up the progress key
+    try {
+      localStorage.removeItem(`${STORAGE_PREFIX}checklist-setlist:${id}`);
+    } catch {
+      // ignore
+    }
+  }, [setSavedSetlists, activeSetlistId, setActiveSetlistId]);
 
   // Derived values
   const checklistName =
@@ -221,16 +396,16 @@ export function useCollectionState() {
       ? (selectedPokemon.length === 1 ? selectedPokemon[0] : `${selectedPokemon.length} Pokemon`)
       : 'Checklist';
 
-  const checklistKeyBase =
-    masterSetType === 'official-set' && selectedSets
-      ? `set:${[...selectedSets].sort().join(',')}`
-      : masterSetType === 'type-collection' && selectedTypes
-      ? `type:${[...selectedTypes].sort().join(',')}`
-      : masterSetType === 'artist-collection' && selectedArtists
-      ? `artist:${[...selectedArtists].sort().join(',')}`
-      : selectedPokemon
-      ? `pokemon:${[...selectedPokemon].sort().join(',')}`
-      : 'empty';
+  // Stable key when a setlist is active; dynamic key otherwise
+  const checklistKeyBase = activeSetlistId
+    ? `setlist:${activeSetlistId}`
+    : computeDynamicChecklistKey(
+        masterSetType || 'pokemon-collection',
+        selectedPokemon || [],
+        selectedSets || [],
+        selectedTypes || [],
+        selectedArtists || [],
+      );
 
   const checklistKey = uniqueArtOnly ? `${checklistKeyBase}:unique` : checklistKeyBase;
 
@@ -263,6 +438,10 @@ export function useCollectionState() {
     cards,
     isLoading,
 
+    // Saved setlists
+    savedSetlists: savedSetlists || [],
+    activeSetlistId,
+
     // Derived
     checklistName,
     checklistKey,
@@ -272,5 +451,9 @@ export function useCollectionState() {
     // Actions
     handleShare,
     loadSetlist,
+    deactivateSetlist,
+    saveSetlist,
+    updateSetlist,
+    deleteSetlist,
   } as const;
 }
