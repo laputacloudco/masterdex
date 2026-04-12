@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -6,6 +5,8 @@ import { BookOpen } from '@phosphor-icons/react';
 
 interface BinderCalculatorProps {
   cardCount: number;
+  cardsPerPage: number;
+  onCardsPerPageChange: (value: number) => void;
 }
 
 const CARDS_PER_PAGE_OPTIONS = [
@@ -20,8 +21,7 @@ const BINDER_SIZES = [
   { pockets: 480, label: '480-pocket' },
 ];
 
-export function BinderCalculator({ cardCount }: BinderCalculatorProps) {
-  const [cardsPerPage, setCardsPerPage] = useState(9);
+export function BinderCalculator({ cardCount, cardsPerPage, onCardsPerPageChange }: BinderCalculatorProps) {
 
   if (cardCount === 0) {
     return null;
@@ -46,7 +46,7 @@ export function BinderCalculator({ cardCount }: BinderCalculatorProps) {
           </CardTitle>
           <Select
             value={String(cardsPerPage)}
-            onValueChange={(v) => setCardsPerPage(Number(v))}
+            onValueChange={(v) => onCardsPerPageChange(Number(v))}
           >
             <SelectTrigger aria-label="Cards per page" className="h-8 w-auto gap-1 text-xs" size="sm">
               <SelectValue />
