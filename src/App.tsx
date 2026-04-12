@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { SavedSetlist } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { SetBuilder } from '@/components/SetBuilder';
 import { Checklist } from '@/components/Checklist';
 import { SavedSetlists } from '@/components/SavedSetlists';
@@ -12,7 +13,7 @@ import { ComparisonView } from '@/components/ComparisonView';
 import { ShowView } from '@/components/ShowView';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Footer } from '@/components/Footer';
-import { ShareNetwork, ClipboardText } from '@phosphor-icons/react';
+import { ShareNetwork, ClipboardText, Lightning } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import { useCollectionState } from '@/hooks/useCollectionState';
 
@@ -34,6 +35,7 @@ function App() {
 
   const [activeTab, setActiveTab] = useState('builder');
   const [binderCardsPerPage, setBinderCardsPerPage] = useState(9);
+  const [showModeOpen, setShowModeOpen] = useState(false);
 
   const handleLoadSetlist = (setlist: SavedSetlist) => {
     loadSetlist(setlist);
@@ -67,13 +69,12 @@ function App() {
         </header>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-6 mb-2 h-auto">
+          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-5 mb-2 h-auto">
             <TabsTrigger value="builder" className="min-h-[44px] text-xs sm:text-sm px-1 sm:px-3">Build Set</TabsTrigger>
             <TabsTrigger value="checklist" disabled={!canViewChecklist} className="min-h-[44px] text-xs sm:text-sm px-1 sm:px-3">
               Checklist {canViewChecklist && `(${cards.length})`}
             </TabsTrigger>
             <TabsTrigger value="binder" disabled={!canViewChecklist} className="min-h-[44px] text-xs sm:text-sm px-1 sm:px-3">Binder</TabsTrigger>
-            <TabsTrigger value="show" disabled={!canViewChecklist} className="min-h-[44px] text-xs sm:text-sm px-1 sm:px-3">Show</TabsTrigger>
             <TabsTrigger value="compare" className="min-h-[44px] text-xs sm:text-sm px-1 sm:px-3">Compare</TabsTrigger>
             <TabsTrigger value="cameos" className="min-h-[44px] text-xs sm:text-sm px-1 sm:px-3">Cameos</TabsTrigger>
           </TabsList>
@@ -145,12 +146,6 @@ function App() {
             )}
           </TabsContent>
 
-          <TabsContent value="show" className="mt-4 sm:mt-8">
-            {canViewChecklist && (
-              <ShowView cards={cards} setName={checklistName} storageKey={checklistKey} />
-            )}
-          </TabsContent>
-
           <TabsContent value="cameos" className="mt-4 sm:mt-8">
             <div className="max-w-5xl mx-auto">
               <CameoBrowser />
@@ -164,7 +159,8 @@ function App() {
           </TabsContent>
         </Tabs>
       </div>
-      {/* Floating checklist button — mobile only, shown when cards are loaded on the builder tab */}
+
+      {/* Floating buttons */}
       {canViewChecklist && !isLoading && activeTab === 'builder' && (
         <div className="fixed bottom-6 left-0 right-0 flex justify-center z-50 sm:hidden px-4 pointer-events-none">
           <Button
@@ -176,6 +172,41 @@ function App() {
           </Button>
         </div>
       )}
+
+      {/* Show Mode FAB — visible on checklist and binder tabs */}
+      {canViewChecklist && (activeTab === 'checklist' || activeTab === 'binder') && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <Button
+            onClick={() => setShowModeOpen(true)}
+            className="shadow-xl rounded-full h-14 px-5 text-sm font-semibold gap-2"
+            size="lg"
+          >
+            <Lightning size={20} weight="fill" />
+            Show Mode
+          </Button>
+        </div>
+      )}
+
+      {/* Show Mode full-screen dialog */}
+      <Dialog open={showModeOpen} onOpenChange={setShowModeOpen}>
+        <DialogContent
+          className="max-w-none sm:max-w-none w-screen h-screen max-h-screen rounded-none border-none p-0 overflow-y-auto"
+          hideCloseButton
+          onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+        >
+          <DialogTitle className="sr-only">Show Mode — {checklistName}</DialogTitle>
+          <div className="p-4 pb-8">
+            <ShowView
+              cards={cards}
+              setName={checklistName}
+              storageKey={checklistKey}
+              onClose={() => setShowModeOpen(false)}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Footer />
     </div>
   );
