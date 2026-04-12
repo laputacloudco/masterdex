@@ -64,6 +64,7 @@ export function ShowView({ cards, setName, storageKey }: ShowViewProps) {
 
   // Track recently found cards for celebration animation
   const [recentlyFound, setRecentlyFound] = useState<Set<string>>(new Set());
+  const inFlightRef = useRef<Set<string>>(new Set());
   const animationTimeouts = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   // Cleanup timeouts on unmount
@@ -93,6 +94,13 @@ export function ShowView({ cards, setName, storageKey }: ShowViewProps) {
     }
     return Array.from(setMap.values()).sort((a, b) => a.name.localeCompare(b.name));
   }, [missingCards]);
+
+  // Auto-clear stale set filter when the selected set has no more missing cards
+  useEffect(() => {
+    if (setFilter && !availableSets.some(s => s.code === setFilter)) {
+      setSetFilter(null);
+    }
+  }, [setFilter, availableSets]);
 
   // Filter + sort
   const displayCards = useMemo(() => {
@@ -151,8 +159,9 @@ export function ShowView({ cards, setName, storageKey }: ShowViewProps) {
   );
 
   const handleGotIt = useCallback((card: PokemonCard) => {
-    // Guard against double-tap while animation is in flight
-    if (recentlyFound.has(card.id)) return;
+    // Synchronous guard against double-tap (ref is immediate, not batched)
+    if (inFlightRef.current.has(card.id)) return;
+    inFlightRef.current.add(card.id);
 
     const price = getPriceForCondition(card, condition) ?? 0;
 
@@ -161,17 +170,20 @@ export function ShowView({ cards, setName, storageKey }: ShowViewProps) {
       navigator.vibrate(50);
     }
 
-    // Show celebration
+    // Persist checked state immediately so tab switches can't drop it
+    toggle(card.id);
+
+    // Show celebration animation
     setRecentlyFound(prev => new Set(prev).add(card.id));
 
-    // Remove celebration after animation completes, then toggle
+    // Remove celebration after animation completes
     const timeout = setTimeout(() => {
-      toggle(card.id);
       setRecentlyFound(prev => {
         const next = new Set(prev);
         next.delete(card.id);
         return next;
       });
+      inFlightRef.current.delete(card.id);
       animationTimeouts.current.delete(card.id);
     }, 600);
     animationTimeouts.current.set(card.id, timeout);
@@ -181,7 +193,7 @@ export function ShowView({ cards, setName, storageKey }: ShowViewProps) {
       count: prev.count + 1,
       value: prev.value + price,
     }));
-  }, [condition, toggle, recentlyFound]);
+  }, [condition, toggle]);
 
   const totalCards = cards.length;
   const missingCount = missingCards.length;
