@@ -183,7 +183,8 @@ function App() {
       {/* Show Mode full-screen dialog */}
       <Dialog open={showModeOpen} onOpenChange={setShowModeOpen}>
         <DialogContent
-          className="max-w-none w-screen h-screen max-h-screen rounded-none border-none p-0 overflow-y-auto [&>button:last-child]:hidden"
+          className="max-w-none sm:max-w-none w-screen h-screen max-h-screen rounded-none border-none p-0 overflow-y-auto"
+          hideCloseButton
           onInteractOutside={(e) => e.preventDefault()}
           onEscapeKeyDown={(e) => e.preventDefault()}
         >
