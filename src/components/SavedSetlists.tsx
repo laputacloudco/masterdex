@@ -16,6 +16,8 @@ interface SavedSetlistsProps {
     variantFilters: VariantFilters | undefined;
     selectedSets: string[] | undefined;
     selectedPokemon: string[] | undefined;
+    selectedTypes?: string[] | undefined;
+    selectedArtists?: string[] | undefined;
     sortOrder: SortOrder | undefined;
     cardCount: number;
   };
@@ -57,6 +59,8 @@ export function SavedSetlists({ currentConfig, onLoad }: SavedSetlistsProps) {
       },
       selectedSets: currentConfig.selectedSets || [],
       selectedPokemon: currentConfig.selectedPokemon || [],
+      selectedTypes: currentConfig.selectedTypes || [],
+      selectedArtists: currentConfig.selectedArtists || [],
       sortOrder: currentConfig.sortOrder || 'chronological',
       cardCount: currentConfig.cardCount,
       createdAt: new Date().toISOString(),
@@ -83,6 +87,8 @@ export function SavedSetlists({ currentConfig, onLoad }: SavedSetlistsProps) {
     switch (type) {
       case 'official-set': return 'Official Set';
       case 'pokemon-collection': return 'Pokemon Collection';
+      case 'type-collection': return 'Type Collection';
+      case 'artist-collection': return 'Artist Collection';
     }
   };
 

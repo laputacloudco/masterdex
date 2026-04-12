@@ -14,6 +14,7 @@ export interface TCGCard {
   name: string;
   supertype: string;
   subtypes?: string[];
+  types?: string[];
   set: {
     id: string;
     name: string;
@@ -161,6 +162,7 @@ export async function mapTCGCardToCards(tcgCard: TCGCard, pokemonDisplayName?: s
       supertype: tcgCard.supertype,
       subtypes: tcgCard.subtypes,
       nationalDexNumber: tcgCard.nationalPokedexNumbers?.[0],
+      types: tcgCard.types,
     }];
   }
 
@@ -194,6 +196,7 @@ export async function mapTCGCardToCards(tcgCard: TCGCard, pokemonDisplayName?: s
       supertype: tcgCard.supertype,
       subtypes: tcgCard.subtypes,
       nationalDexNumber: tcgCard.nationalPokedexNumbers?.[0],
+      types: tcgCard.types,
     };
   });
 }
@@ -360,4 +363,64 @@ export function deduplicateCards(cards: PokemonCard[]): PokemonCard[] {
     }
   }
   return Array.from(seen.values());
+}
+
+/**
+ * Fetch all cards of a specific Pokemon type (e.g., Fire, Water, Dragon).
+ */
+export async function fetchCardsForType(typeName: string): Promise<PokemonCard[]> {
+  const normalizedType = typeName.charAt(0).toUpperCase() + typeName.slice(1).toLowerCase();
+  const cacheKey = `tcg:v${CARD_CACHE_VERSION}:type-cards:${normalizedType.toLowerCase()}`;
+  const cached = await cacheGet<PokemonCard[]>(cacheKey);
+  if (cached) return cached;
+
+  const tcgCards = await fetchAllPages(
+    `${API_BASE_URL}/cards?q=types:${encodeURIComponent(normalizedType)}&orderBy=set.releaseDate`
+  );
+  const cardArrays = await Promise.all(tcgCards.map(c => mapTCGCardToCards(c)));
+  const cards = cardArrays.flat();
+
+  await cacheSet(cacheKey, cards, CACHE_TTL.TCG_CARDS);
+  return cards;
+}
+
+/**
+ * Fetch all cards by a specific artist.
+ */
+export async function fetchCardsForArtist(artistName: string): Promise<PokemonCard[]> {
+  const cacheKey = `tcg:v${CARD_CACHE_VERSION}:artist-cards:${artistName.toLowerCase()}`;
+  const cached = await cacheGet<PokemonCard[]>(cacheKey);
+  if (cached) return cached;
+
+  const tcgCards = await fetchAllPages(
+    `${API_BASE_URL}/cards?q=artist:"${encodeURIComponent(artistName)}"&orderBy=set.releaseDate`
+  );
+  const cardArrays = await Promise.all(tcgCards.map(c => mapTCGCardToCards(c)));
+  const cards = cardArrays.flat();
+
+  await cacheSet(cacheKey, cards, CACHE_TTL.TCG_CARDS);
+  return cards;
+}
+
+/**
+ * Search for artist names by querying the TCG API for cards matching an artist name.
+ * Returns unique artist names from matching cards.
+ */
+export async function searchArtists(query: string): Promise<string[]> {
+  if (!query || query.length < 3) return [];
+
+  const cacheKey = `tcg:artist-search:${query.toLowerCase()}`;
+  const cached = await cacheGet<string[]>(cacheKey);
+  if (cached) return cached;
+
+  const url = `${API_BASE_URL}/cards?q=artist:"${encodeURIComponent(query)}*"&pageSize=100&select=artist`;
+  const json = await scheduledFetchJson<{ data?: TCGCard[] }>(url);
+  const artists = [...new Set(
+    (json.data || [])
+      .map(c => c.artist)
+      .filter((a): a is string => !!a)
+  )].sort();
+
+  await cacheSet(cacheKey, artists, CACHE_TTL.TCG_CARDS);
+  return artists;
 }
