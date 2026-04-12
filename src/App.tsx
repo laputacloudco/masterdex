@@ -26,8 +26,9 @@ function App() {
     selectedArtists, setSelectedArtists,
     uniqueArtOnly, setUniqueArtOnly,
     cards, isLoading,
+    savedSetlists, activeSetlistId,
     checklistName, checklistKey, canViewChecklist, missingVariantData,
-    handleShare, loadSetlist,
+    handleShare, loadSetlist, deactivateSetlist, saveSetlist, updateSetlist, deleteSetlist,
   } = useCollectionState();
 
   const [activeTab, setActiveTab] = useState('builder');
@@ -89,7 +90,13 @@ function App() {
                     sortOrder,
                     cardCount: cards.length,
                   }}
+                  savedSetlists={savedSetlists}
+                  activeSetlistId={activeSetlistId}
                   onLoad={handleLoadSetlist}
+                  onSave={saveSetlist}
+                  onUpdate={updateSetlist}
+                  onDelete={deleteSetlist}
+                  onDeactivate={deactivateSetlist}
                 />
                 
                 <SetBuilder
