@@ -168,9 +168,9 @@ export function useCollectionState() {
         if (uniqueArtOnly) {
           const seen = new Map<string, PokemonCard>();
           for (const card of filteredCards) {
-            const baseId = card.id.replace(/-(?:normal|reverseHolofoil|holofoil|1stEditionHolofoil|1stEditionNormal|unlimitedHolofoil)$/, '');
-            if (!seen.has(baseId)) {
-              seen.set(baseId, card);
+            const dedupeKey = card.tcgId ?? card.id;
+            if (!seen.has(dedupeKey)) {
+              seen.set(dedupeKey, card);
             }
           }
           cardsToSort = Array.from(seen.values());
@@ -221,7 +221,7 @@ export function useCollectionState() {
       ? (selectedPokemon.length === 1 ? selectedPokemon[0] : `${selectedPokemon.length} Pokemon`)
       : 'Checklist';
 
-  const checklistKey =
+  const checklistKeyBase =
     masterSetType === 'official-set' && selectedSets
       ? `set:${[...selectedSets].sort().join(',')}`
       : masterSetType === 'type-collection' && selectedTypes
@@ -231,6 +231,8 @@ export function useCollectionState() {
       : selectedPokemon
       ? `pokemon:${[...selectedPokemon].sort().join(',')}`
       : 'empty';
+
+  const checklistKey = uniqueArtOnly ? `${checklistKeyBase}:unique` : checklistKeyBase;
 
   const canViewChecklist = cards.length > 0;
 
