@@ -36,17 +36,21 @@
 
 ### Phase 2: Differentiation
 - What do I still need buy list with TCGPlayer links + cost estimate
-- Multi-Pokemon comparison (side-by-side card histories)
-- Evolution chain visualization tree
-- Printable binder pages (9-pocket format with card images)
-- Cameo contribution workflow
+- Printable binder pages (integrated with binder view and binder calculator, supports configurable pocket layouts)
+- Type-themed collections (every Dragon-type card)
 
 ### Phase 3: Growth
 - Artist master sets (every card by Mitsuhiro Arita)
-- Type-themed collections (every Dragon-type card)
-- Japanese set support
+- Multi-Pokemon comparison (side-by-side card histories)
+
+### Phase 4: Scale
+- Evolution chain visualization tree
+- Cameo contribution workflow
 - Shareable collection profiles (public URLs)
 - Price history charts
+
+### Phase 5: Expansion
+- Japanese set support
 - Community leaderboard (opt-in)
 
 ## Monetization
