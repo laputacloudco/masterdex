@@ -7,7 +7,7 @@ import { getDexNumber, getSpecies, searchSpecies } from './pokeApi';
 const API_BASE_URL = 'https://api.pokemontcg.io/v2';
 
 // Bump when mapTCGCardToCards output shape changes to invalidate cached results
-const CARD_CACHE_VERSION = 2;
+const CARD_CACHE_VERSION = 3;
 
 export interface TCGCard {
   id: string;
@@ -125,6 +125,7 @@ function priceTypeLabel(priceType: string): string {
  * Map a TCG API card to one or more PokemonCard entries.
  * Expands cards with multiple TCGPlayer price types (e.g., normal + reverseHolofoil)
  * into separate checklist entries so collectors can track each variant independently.
+ * When price data is missing, returns a single entry — we don't guess at variants.
  */
 export async function mapTCGCardToCards(tcgCard: TCGCard, pokemonDisplayName?: string): Promise<PokemonCard[]> {
   let resolvedName = pokemonDisplayName || tcgCard.name;
@@ -137,7 +138,7 @@ export async function mapTCGCardToCards(tcgCard: TCGCard, pokemonDisplayName?: s
     ? Object.entries(tcgCard.tcgplayer.prices)
     : [];
 
-  // If no price data or only one variant, return a single card
+  // No price data or single variant — return one entry
   if (tcgPriceTypes.length <= 1) {
     const priceData = tcgPriceTypes[0]?.[1];
     return [{
@@ -160,14 +161,10 @@ export async function mapTCGCardToCards(tcgCard: TCGCard, pokemonDisplayName?: s
   }
 
   // Expand into one entry per price type variant.
-  // Preserve the semantic variant from mapVariant() (promo, collab, etc.)
-  // and layer on the physical variant (holo/reverse-holo) as artVariant.
   const baseVariant = mapVariant(tcgCard);
 
   return tcgPriceTypes.map(([priceType, priceData]) => {
     const physicalVariant = priceTypeToVariant(priceType);
-    // Use the semantic variant (promo, collab, etc.) if it's more specific than normal/holo.
-    // Only use the physical variant when the card is otherwise just normal/holo.
     const variant = (baseVariant !== 'normal' && baseVariant !== 'holo')
       ? baseVariant
       : physicalVariant;
@@ -187,7 +184,7 @@ export async function mapTCGCardToCards(tcgCard: TCGCard, pokemonDisplayName?: s
       imageUrl: tcgCard.images.small,
       largeImageUrl: tcgCard.images.large,
       marketPrice: priceData?.market ?? priceData?.mid,
-      prices: { low: priceData?.low, mid: priceData?.mid, market: priceData?.market, high: priceData?.high },
+      prices: { low: priceData.low, mid: priceData.mid, market: priceData.market, high: priceData.high },
       tcgPlayerUrl: tcgCard.tcgplayer?.url,
     };
   });
