@@ -65,10 +65,11 @@ function getPriceForCondition(card: PokemonCard, condition: CardCondition): numb
 interface ChecklistProps {
   cards: PokemonCard[];
   setName: string;
+  storageKey?: string;
 }
 
-export function Checklist({ cards, setName }: ChecklistProps) {
-  const [checkedCards, setCheckedCards] = useKV<string[]>(`checklist-${setName}`, []);
+export function Checklist({ cards, setName, storageKey }: ChecklistProps) {
+  const [checkedCards, setCheckedCards] = useKV<string[]>(`checklist-${storageKey || setName}`, []);
   const [checklistSort, setChecklistSort] = useState<ChecklistSortOrder>('default');
   const [condition, setCondition] = useState<CardCondition>('near-mint');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
