@@ -11,6 +11,8 @@ const MAX_RETRIES = 3;
 
 let activeRequests = 0;
 const queue: QueuedRequest[] = [];
+// Cache the response body as cloneable data, not the raw Response object.
+// Multiple callers of the same URL each get their own Response via clone().
 const inflightRequests = new Map<string, Promise<Response>>();
 
 function processQueue() {
@@ -79,11 +81,14 @@ function sleep(ms: number): Promise<void> {
 
 /**
  * Scheduled fetch with concurrency control, retry, and request deduplication.
- * Same URL in-flight returns the same promise.
+ * Deduped callers each get a cloned Response so .json() can be called by each.
  */
 export function scheduledFetch(url: string, signal?: AbortSignal): Promise<Response> {
   const existing = inflightRequests.get(url);
-  if (existing) return existing;
+  if (existing) {
+    // Return a clone so each caller can independently consume the body
+    return existing.then(r => r.clone());
+  }
 
   const promise = new Promise<Response>((resolve, reject) => {
     queue.push({ url, resolve, reject, signal });
