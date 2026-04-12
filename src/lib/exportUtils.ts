@@ -251,3 +251,39 @@ export function printChecklist() {
     printWindow.print();
   }, 250);
 }
+
+function csvEscape(value: string): string {
+  if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
+}
+
+export function exportChecklistToCSV(
+  cards: PokemonCard[],
+  checkedCardIds: string[],
+  setName: string
+) {
+  const checkedSet = new Set(checkedCardIds);
+  const header = ['Card Name', 'Pokemon', 'Set', 'Set Number', 'Variant', 'Rarity', 'Owned', 'Market Price', 'TCGPlayer URL'];
+  const rows = cards.map(card => [
+    csvEscape(card.name),
+    csvEscape(card.pokemonName),
+    csvEscape(card.setName),
+    card.setNumber,
+    card.variant,
+    card.rarity,
+    checkedSet.has(card.id) ? 'yes' : 'no',
+    card.marketPrice != null ? card.marketPrice.toFixed(2) : '',
+    card.tcgPlayerUrl || '',
+  ].join(','));
+
+  const csv = [header.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${setName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_checklist.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
