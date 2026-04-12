@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { MagnifyingGlass, X, Plus, Scales, ImageBroken } from '@phosphor-icons/react';
 import { searchPokemon, fetchCardsForPokemon, deduplicateCards } from '@/lib/pokemonTcgApi';
 import type { PokemonCard } from '@/lib/types';
-import { formatCardName, getVariantLabel } from '@/lib/cardUtils';
+import { getVariantLabel } from '@/lib/cardUtils';
 import { CardPreview } from './CardPreview';
 
 const MAX_COLUMNS = 4;
