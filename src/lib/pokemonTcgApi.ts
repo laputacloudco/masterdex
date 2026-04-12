@@ -413,7 +413,14 @@ export async function searchArtists(query: string): Promise<string[]> {
   const cached = await cacheGet<string[]>(cacheKey);
   if (cached) return cached;
 
-  const url = `${API_BASE_URL}/cards?q=artist:"${encodeURIComponent(query)}*"&pageSize=100&select=artist`;
+  // Lucene (used by the TCG API) does not support wildcards inside phrase queries.
+  // For multi-word queries use an exact phrase match; for single-word queries append a wildcard.
+  const hasSpace = query.includes(' ');
+  const sanitized = query.replace(/"/g, '\\"');
+  const artistQuery = hasSpace
+    ? `artist:"${sanitized}"`
+    : `artist:${sanitized}*`;
+  const url = `${API_BASE_URL}/cards?q=${encodeURIComponent(artistQuery)}&pageSize=100&select=artist`;
   const json = await scheduledFetchJson<{ data?: TCGCard[] }>(url);
   const artists = [...new Set(
     (json.data || [])
