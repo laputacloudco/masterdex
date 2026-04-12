@@ -15,7 +15,7 @@ import {
   ArrowsDownUp,
   X,
 } from '@phosphor-icons/react';
-import { formatCardName, getVariantLabel } from '@/lib/cardUtils';
+import { formatCardName, getVariantLabel, parseCardNumber } from '@/lib/cardUtils';
 import { CardPreview } from './CardPreview';
 
 type ShowSortOrder = 'set' | 'price-low' | 'price-high' | 'name';
@@ -133,7 +133,10 @@ export function ShowView({ cards, setName, storageKey }: ShowViewProps) {
         sorted.sort((a, b) => {
           const setCmp = a.setName.localeCompare(b.setName);
           if (setCmp !== 0) return setCmp;
-          return parseInt(a.setNumber) - parseInt(b.setNumber);
+          const aNum = parseCardNumber(a.setNumber);
+          const bNum = parseCardNumber(b.setNumber);
+          if (aNum.numeric !== bNum.numeric) return aNum.numeric - bNum.numeric;
+          return aNum.raw.localeCompare(bNum.raw);
         });
         break;
     }
@@ -148,6 +151,9 @@ export function ShowView({ cards, setName, storageKey }: ShowViewProps) {
   );
 
   const handleGotIt = useCallback((card: PokemonCard) => {
+    // Guard against double-tap while animation is in flight
+    if (recentlyFound.has(card.id)) return;
+
     const price = getPriceForCondition(card, condition) ?? 0;
 
     // Haptic feedback
@@ -175,7 +181,7 @@ export function ShowView({ cards, setName, storageKey }: ShowViewProps) {
       count: prev.count + 1,
       value: prev.value + price,
     }));
-  }, [condition, toggle]);
+  }, [condition, toggle, recentlyFound]);
 
   const totalCards = cards.length;
   const missingCount = missingCards.length;
@@ -277,6 +283,8 @@ export function ShowView({ cards, setName, storageKey }: ShowViewProps) {
             />
             {search && (
               <button
+                type="button"
+                aria-label="Clear search"
                 onClick={() => setSearch('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
@@ -354,17 +362,24 @@ export function ShowView({ cards, setName, storageKey }: ShowViewProps) {
                 >
                   {/* Card thumbnail — tap for preview */}
                   <CardPreview card={card}>
-                    {card.imageUrl ? (
-                      <img
-                        src={card.imageUrl}
-                        alt={card.name}
-                        className="w-12 h-[67px] object-cover rounded border cursor-pointer shrink-0"
-                      />
-                    ) : (
-                      <div className="w-12 h-[67px] bg-muted rounded border flex items-center justify-center text-[8px] text-muted-foreground shrink-0 cursor-pointer">
-                        ?
-                      </div>
-                    )}
+                    <button
+                      type="button"
+                      aria-label={`Preview ${card.name}`}
+                      onClick={() => setPreviewCard(card)}
+                      className="shrink-0"
+                    >
+                      {card.imageUrl ? (
+                        <img
+                          src={card.imageUrl}
+                          alt={card.name}
+                          className="w-12 h-[67px] object-cover rounded border cursor-pointer"
+                        />
+                      ) : (
+                        <div className="w-12 h-[67px] bg-muted rounded border flex items-center justify-center text-[8px] text-muted-foreground cursor-pointer">
+                          ?
+                        </div>
+                      )}
+                    </button>
                   </CardPreview>
 
                   {/* Card info */}
