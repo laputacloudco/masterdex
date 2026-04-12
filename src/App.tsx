@@ -263,9 +263,9 @@ function App() {
           <TabsContent value="checklist" className="mt-4 sm:mt-8">
             {canViewChecklist && (
               <div className="max-w-4xl mx-auto space-y-6">
+                <Checklist cards={cards} setName={checklistName} />
                 <VariantStatistics cards={cards} />
                 <BinderCalculator cardCount={cards.length} />
-                <Checklist cards={cards} setName={checklistName} />
               </div>
             )}
           </TabsContent>
