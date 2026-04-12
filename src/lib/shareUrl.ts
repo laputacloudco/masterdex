@@ -45,13 +45,15 @@ const VARIANT_KEYS: (keyof VariantFilters)[] = [
   'rainbowRare', 'gold', 'promo', 'collab', 'tournament', 'cameo',
 ];
 
-const VALID_TYPES: MasterSetType[] = ['official-set', 'pokemon-collection'];
+const VALID_TYPES: MasterSetType[] = ['official-set', 'pokemon-collection', 'type-collection', 'artist-collection'];
 const VALID_SORTS: SortOrder[] = ['set-order', 'chronological', 'grouped-by-set', 'grouped-by-pokemon', 'evolution-chain'];
 
 export interface ShareableConfig {
   masterSetType: MasterSetType;
   selectedPokemon: string[];
   selectedSets: string[];
+  selectedTypes?: string[];
+  selectedArtists?: string[];
   variantFilters: VariantFilters;
   sortOrder: SortOrder;
   uniqueArtOnly?: boolean;
@@ -68,6 +70,12 @@ export function buildShareUrl(config: ShareableConfig): string {
   }
   if (config.selectedSets.length > 0) {
     params.set('sets', config.selectedSets.join(','));
+  }
+  if (config.selectedTypes && config.selectedTypes.length > 0) {
+    params.set('types', config.selectedTypes.join(','));
+  }
+  if (config.selectedArtists && config.selectedArtists.length > 0) {
+    params.set('artists', config.selectedArtists.join(','));
   }
 
   // Only encode variant filters if they differ from defaults (all enabled).
@@ -119,6 +127,16 @@ export function parseShareUrl(search: string): ShareableConfig | null {
     ? setsParam.split(',').map(s => s.trim()).filter(Boolean)
     : [];
 
+  const typesParam = params.get('types');
+  const selectedTypes = typesParam
+    ? typesParam.split(',').map(t => t.trim()).filter(Boolean)
+    : [];
+
+  const artistsParam = params.get('artists');
+  const selectedArtists = artistsParam
+    ? artistsParam.split(',').map(a => a.trim()).filter(Boolean)
+    : [];
+
   // Variant filters: if param is absent, ALL variants enabled (forward-compatible).
   // If present, only listed variants are enabled. Unknown keys are ignored.
   let variantFilters: VariantFilters;
@@ -141,5 +159,5 @@ export function parseShareUrl(search: string): ShareableConfig | null {
 
   const uniqueArtOnly = params.get('unique') === '1';
 
-  return { masterSetType, selectedPokemon, selectedSets, variantFilters, sortOrder, uniqueArtOnly };
+  return { masterSetType, selectedPokemon, selectedSets, selectedTypes, selectedArtists, variantFilters, sortOrder, uniqueArtOnly };
 }

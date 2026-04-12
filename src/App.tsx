@@ -21,6 +21,8 @@ function App() {
     sortOrder, setSortOrder,
     selectedPokemon, setSelectedPokemon,
     selectedSets, setSelectedSets,
+    selectedTypes, setSelectedTypes,
+    selectedArtists, setSelectedArtists,
     uniqueArtOnly, setUniqueArtOnly,
     cards, isLoading,
     checklistName, checklistKey, canViewChecklist, missingVariantData,
@@ -80,6 +82,8 @@ function App() {
                     variantFilters,
                     selectedSets,
                     selectedPokemon,
+                    selectedTypes,
+                    selectedArtists,
                     sortOrder,
                     cardCount: cards.length,
                   }}
@@ -97,6 +101,10 @@ function App() {
                   setSelectedPokemon={setSelectedPokemon}
                   selectedSets={selectedSets}
                   setSelectedSets={setSelectedSets}
+                  selectedTypes={selectedTypes}
+                  setSelectedTypes={setSelectedTypes}
+                  selectedArtists={selectedArtists}
+                  setSelectedArtists={setSelectedArtists}
                   uniqueArtOnly={uniqueArtOnly}
                   setUniqueArtOnly={setUniqueArtOnly}
                   isLoading={isLoading}

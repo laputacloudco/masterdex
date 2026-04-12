@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useKV } from './useKV';
 import type { PokemonCard, MasterSetType, SortOrder, SavedSetlist, VariantFilters } from '@/lib/types';
-import { fetchCardsForSet, fetchCardsForPokemon, deduplicateCards } from '@/lib/pokemonTcgApi';
+import { fetchCardsForSet, fetchCardsForPokemon, fetchCardsForType, fetchCardsForArtist, deduplicateCards } from '@/lib/pokemonTcgApi';
 import { sortCards, sortByEvolutionChainAsync, sortGroupedByPokemonAsync } from '@/lib/cardUtils';
 import { buildShareUrl, parseShareUrl } from '@/lib/shareUrl';
 import { toast } from 'sonner';
@@ -26,6 +26,8 @@ export function useCollectionState() {
   const [sortOrder, setSortOrder] = useKV<SortOrder>('config-sort', 'chronological');
   const [selectedPokemon, setSelectedPokemon] = useKV<string[]>('config-pokemon', []);
   const [selectedSets, setSelectedSets] = useKV<string[]>('config-sets', []);
+  const [selectedTypes, setSelectedTypes] = useKV<string[]>('config-types', []);
+  const [selectedArtists, setSelectedArtists] = useKV<string[]>('config-artists', []);
   const [uniqueArtOnly, setUniqueArtOnly] = useKV<boolean>('config-unique-art', false);
 
   const [cards, setCards] = useState<PokemonCard[]>([]);
@@ -44,6 +46,8 @@ export function useCollectionState() {
       setSortOrder(config.sortOrder);
       setSelectedPokemon(config.selectedPokemon);
       setSelectedSets(config.selectedSets);
+      if (config.selectedTypes) setSelectedTypes(config.selectedTypes);
+      if (config.selectedArtists) setSelectedArtists(config.selectedArtists);
       if (config.uniqueArtOnly !== undefined) setUniqueArtOnly(config.uniqueArtOnly);
       window.history.replaceState({}, '', window.location.pathname);
     }
@@ -54,15 +58,19 @@ export function useCollectionState() {
     const currentType = masterSetType || 'pokemon-collection';
     const currentPokemon = selectedPokemon || [];
     const currentSets = selectedSets || [];
+    const currentTypes = selectedTypes || [];
+    const currentArtists = selectedArtists || [];
     const currentVariants = variantFilters || DEFAULT_VARIANT_FILTERS;
     const currentSort = sortOrder || 'chronological';
 
     const hasSelection =
       (currentType === 'official-set' && currentSets.length > 0) ||
-      (currentType === 'pokemon-collection' && currentPokemon.length > 0);
+      (currentType === 'pokemon-collection' && currentPokemon.length > 0) ||
+      (currentType === 'type-collection' && currentTypes.length > 0) ||
+      (currentType === 'artist-collection' && currentArtists.length > 0);
 
     if (!hasSelection) {
-      toast.error('Add some Pokemon or sets before sharing.');
+      toast.error('Add some Pokemon, sets, types, or artists before sharing.');
       return;
     }
 
@@ -70,6 +78,8 @@ export function useCollectionState() {
       masterSetType: currentType,
       selectedPokemon: currentPokemon,
       selectedSets: currentSets,
+      selectedTypes: currentTypes,
+      selectedArtists: currentArtists,
       variantFilters: currentVariants,
       sortOrder: currentSort,
       uniqueArtOnly: uniqueArtOnly ?? false,
@@ -80,14 +90,16 @@ export function useCollectionState() {
     }).catch(() => {
       toast.error('Failed to copy link.');
     });
-  }, [masterSetType, selectedPokemon, selectedSets, variantFilters, sortOrder, uniqueArtOnly]);
+  }, [masterSetType, selectedPokemon, selectedSets, selectedTypes, selectedArtists, variantFilters, sortOrder, uniqueArtOnly]);
 
   // Fetch and process cards when config changes
   useEffect(() => {
     const fetchCards = async () => {
       const hasSelection =
         (masterSetType === 'official-set' && selectedSets && selectedSets.length > 0) ||
-        (masterSetType === 'pokemon-collection' && selectedPokemon && selectedPokemon.length > 0);
+        (masterSetType === 'pokemon-collection' && selectedPokemon && selectedPokemon.length > 0) ||
+        (masterSetType === 'type-collection' && selectedTypes && selectedTypes.length > 0) ||
+        (masterSetType === 'artist-collection' && selectedArtists && selectedArtists.length > 0);
 
       if (!hasSelection) {
         setCards([]);
@@ -104,9 +116,17 @@ export function useCollectionState() {
           const promises = selectedSets.map(setCode => fetchCardsForSet(setCode));
           const results = await Promise.all(promises);
           fetchedCards = results.flat();
-        } else if (selectedPokemon) {
+        } else if (masterSetType === 'pokemon-collection' && selectedPokemon) {
           const includeCameos = currentVariantFilters.cameo;
           const promises = selectedPokemon.map(pokemon => fetchCardsForPokemon(pokemon, includeCameos));
+          const results = await Promise.all(promises);
+          fetchedCards = results.flat();
+        } else if (masterSetType === 'type-collection' && selectedTypes) {
+          const promises = selectedTypes.map(type => fetchCardsForType(type));
+          const results = await Promise.all(promises);
+          fetchedCards = results.flat();
+        } else if (masterSetType === 'artist-collection' && selectedArtists) {
+          const promises = selectedArtists.map(artist => fetchCardsForArtist(artist));
           const results = await Promise.all(promises);
           fetchedCards = results.flat();
         }
@@ -176,7 +196,7 @@ export function useCollectionState() {
     };
 
     fetchCards();
-  }, [masterSetType, variantFilters, sortOrder, selectedPokemon, selectedSets, uniqueArtOnly]);
+  }, [masterSetType, variantFilters, sortOrder, selectedPokemon, selectedSets, selectedTypes, selectedArtists, uniqueArtOnly]);
 
   // Load a saved setlist
   const loadSetlist = useCallback((setlist: SavedSetlist) => {
@@ -185,12 +205,18 @@ export function useCollectionState() {
     setSortOrder(setlist.sortOrder);
     setSelectedPokemon(setlist.selectedPokemon);
     setSelectedSets(setlist.selectedSets);
-  }, [setMasterSetType, setVariantFilters, setSortOrder, setSelectedPokemon, setSelectedSets]);
+    setSelectedTypes(setlist.selectedTypes || []);
+    setSelectedArtists(setlist.selectedArtists || []);
+  }, [setMasterSetType, setVariantFilters, setSortOrder, setSelectedPokemon, setSelectedSets, setSelectedTypes, setSelectedArtists]);
 
   // Derived values
   const checklistName =
     masterSetType === 'official-set' && selectedSets
       ? (selectedSets.length === 1 ? selectedSets[0] : `${selectedSets.length} Sets`)
+      : masterSetType === 'type-collection' && selectedTypes
+      ? (selectedTypes.length === 1 ? selectedTypes[0] : `${selectedTypes.length} Types`)
+      : masterSetType === 'artist-collection' && selectedArtists
+      ? (selectedArtists.length === 1 ? selectedArtists[0] : `${selectedArtists.length} Artists`)
       : selectedPokemon
       ? (selectedPokemon.length === 1 ? selectedPokemon[0] : `${selectedPokemon.length} Pokemon`)
       : 'Checklist';
@@ -198,6 +224,10 @@ export function useCollectionState() {
   const checklistKey =
     masterSetType === 'official-set' && selectedSets
       ? `set:${[...selectedSets].sort().join(',')}`
+      : masterSetType === 'type-collection' && selectedTypes
+      ? `type:${[...selectedTypes].sort().join(',')}`
+      : masterSetType === 'artist-collection' && selectedArtists
+      ? `artist:${[...selectedArtists].sort().join(',')}`
       : selectedPokemon
       ? `pokemon:${[...selectedPokemon].sort().join(',')}`
       : 'empty';
@@ -220,6 +250,10 @@ export function useCollectionState() {
     setSelectedPokemon,
     selectedSets,
     setSelectedSets,
+    selectedTypes,
+    setSelectedTypes,
+    selectedArtists,
+    setSelectedArtists,
     uniqueArtOnly,
     setUniqueArtOnly,
 
