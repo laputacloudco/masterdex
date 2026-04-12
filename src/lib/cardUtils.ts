@@ -5,7 +5,7 @@ import { getEvolutionChain } from './pokeApi';
  * Parse a card number for sorting. Handles numeric, alphanumeric,
  * and promo-style numbers (e.g., "SWSH120", "TG15", "GG01").
  */
-function parseCardNumber(setNumber: string): { numeric: number; raw: string } {
+export function parseCardNumber(setNumber: string): { numeric: number; raw: string } {
   const num = setNumber.split('/')[0].trim();
   const parsed = parseInt(num, 10);
   return { numeric: isNaN(parsed) ? Infinity : parsed, raw: num };
