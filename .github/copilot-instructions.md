@@ -44,4 +44,6 @@ pokemonTcgApi.ts    ──►  requestScheduler.ts   App.tsx orchestrates
 
 **API responses should be cached** via `cacheGet`/`cacheSet` from `apiCache.ts` with appropriate TTLs: `CACHE_TTL.POKE_API` (30 days), `CACHE_TTL.TCG_SETS` (1 day), `CACHE_TTL.TCG_CARDS` (1 hour).
 
+**Share URLs are a public contract** (`src/lib/shareUrl.ts`). The query parameter format must remain forward-compatible. Rules: never rename existing params or values, unknown params/values must be ignored or fall back gracefully, omitting `variants` means all enabled (so new variant types auto-include for old URLs). See the doc comment in `shareUrl.ts` for the full contract. Bump the `v` param only for breaking changes.
+
 **UI components** use Radix primitives from `src/components/ui/` (shadcn pattern), Phosphor icons (`@phosphor-icons/react`), and Tailwind utility classes. Domain types live in `src/lib/types.ts`.
