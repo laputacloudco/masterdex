@@ -7,12 +7,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { Printer, CheckCircle, CurrencyDollar, FilePdf, CaretDown, Cards, UserCircle, ArrowsDownUp, List, GridFour, ShoppingCart, Storefront } from '@phosphor-icons/react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Printer, CheckCircle, CurrencyDollar, FilePdf, CaretDown, UserCircle, ArrowsDownUp, List, GridFour, ShoppingCart, Storefront } from '@phosphor-icons/react';
 import { formatCardName, getVariantLabel } from '@/lib/cardUtils';
 import { CardPreview } from './CardPreview';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { exportChecklistToPDF, exportPlaceholdersToPDF, exportChecklistToCSV, printChecklist } from '@/lib/exportUtils';
+import { exportChecklistToPDF, exportChecklistToCSV, printChecklist } from '@/lib/exportUtils';
 import { toast } from 'sonner';
 
 type ViewMode = 'list' | 'gallery';
@@ -107,31 +107,6 @@ export function Checklist({ cards, setName, storageKey }: ChecklistProps) {
     }
   };
 
-  const handleExportProxies = async () => {
-    try {
-      await exportPlaceholdersToPDF(cards, setName);
-      toast.success('Placeholders exported to PDF!');
-    } catch (error) {
-      console.error('Failed to export placeholders:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to export placeholders');
-    }
-  };
-
-  const handleExportMissingProxies = async () => {
-    const missingCards = cards.filter(card => !isChecked(card.id));
-    if (missingCards.length === 0) {
-      toast.info('No missing cards — your collection is complete!');
-      return;
-    }
-    try {
-      await exportPlaceholdersToPDF(missingCards, `${setName}_missing`);
-      toast.success(`Exported ${missingCards.length} missing card proxies to PDF!`);
-    } catch (error) {
-      console.error('Failed to export placeholders:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to export placeholders');
-    }
-  };
-
   const handlePrint = () => {
     printChecklist();
   };
@@ -221,15 +196,7 @@ export function Checklist({ cards, setName, storageKey }: ChecklistProps) {
                   <FilePdf className="mr-2" />
                   Export Checklist CSV
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleExportProxies}>
-                  <Cards className="mr-2" />
-                  Export All Proxies PDF
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleExportMissingProxies}>
-                  <Cards className="mr-2" />
-                  Export Missing Cards Proxies
-                </DropdownMenuItem>
+
               </DropdownMenuContent>
               </DropdownMenu>
               <div className="flex items-center rounded-md border">

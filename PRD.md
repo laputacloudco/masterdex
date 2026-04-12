@@ -59,12 +59,12 @@
 ### Phase 1: Foundation — COMPLETE
 All shipped. See What Has Shipped above.
 
-### Phase 2: Differentiation
-- What do I still need buy list with TCGPlayer links + cost estimate
+### Phase 2: Differentiation — COMPLETE
+- Buy list with TCGPlayer links + cost estimate
 - Printable binder pages (integrated with binder view and binder calculator, supports configurable pocket layouts)
 - Type-themed collections (every Dragon-type card)
 
-### Phase 3: Growth
+### Phase 3: Growth — COMPLETE
 - Artist master sets (every card by Mitsuhiro Arita)
 - Multi-Pokemon comparison (side-by-side card histories)
 
