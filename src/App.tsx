@@ -1,6 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useKV } from '@/hooks/useKV';
-import type { PokemonCard, MasterSetType, SortOrder, SavedSetlist, VariantFilters } from '@/lib/types';
+import { useState } from 'react';
+import type { SavedSetlist } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SetBuilder } from '@/components/SetBuilder';
 import { Checklist } from '@/components/Checklist';
@@ -11,220 +10,29 @@ import { BinderView } from '@/components/BinderView';
 import { CameoBrowser } from '@/components/CameoBrowser';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Footer } from '@/components/Footer';
-import { fetchCardsForSet, fetchCardsForPokemon, deduplicateCards } from '@/lib/pokemonTcgApi';
-import { sortCards, sortByEvolutionChainAsync, sortGroupedByPokemonAsync } from '@/lib/cardUtils';
-import { buildShareUrl, parseShareUrl } from '@/lib/shareUrl';
-import { toast } from 'sonner';
 import { ShareNetwork } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
-
-const DEFAULT_VARIANT_FILTERS: VariantFilters = {
-  normal: true,
-  holo: true,
-  reverseHolo: true,
-  fullArt: true,
-  secretRare: true,
-  rainbowRare: true,
-  gold: true,
-  promo: true,
-  collab: true,
-  tournament: true,
-  cameo: true,
-};
+import { useCollectionState } from '@/hooks/useCollectionState';
 
 function App() {
-  const [masterSetType, setMasterSetType] = useKV<MasterSetType>('config-type', 'pokemon-collection');
-  const [variantFilters, setVariantFilters] = useKV<VariantFilters>('config-variants', DEFAULT_VARIANT_FILTERS);
-  const [sortOrder, setSortOrder] = useKV<SortOrder>('config-sort', 'chronological');
-  const [selectedPokemon, setSelectedPokemon] = useKV<string[]>('config-pokemon', []);
-  const [selectedSets, setSelectedSets] = useKV<string[]>('config-sets', []);
-  const [uniqueArtOnly, setUniqueArtOnly] = useKV<boolean>('config-unique-art', false);
-  
-  const [cards, setCards] = useState<PokemonCard[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const {
+    masterSetType, setMasterSetType,
+    variantFilters, setVariantFilters,
+    sortOrder, setSortOrder,
+    selectedPokemon, setSelectedPokemon,
+    selectedSets, setSelectedSets,
+    uniqueArtOnly, setUniqueArtOnly,
+    cards, isLoading,
+    checklistName, checklistKey, canViewChecklist, missingVariantData,
+    handleShare, loadSetlist,
+  } = useCollectionState();
+
   const [activeTab, setActiveTab] = useState('builder');
-  const urlApplied = useRef(false);
-
-  // On mount, parse URL query params and apply shared config
-  useEffect(() => {
-    if (urlApplied.current) return;
-    urlApplied.current = true;
-
-    const config = parseShareUrl(window.location.search);
-    if (config) {
-      setMasterSetType(config.masterSetType);
-      setVariantFilters(config.variantFilters);
-      setSortOrder(config.sortOrder);
-      setSelectedPokemon(config.selectedPokemon);
-      setSelectedSets(config.selectedSets);
-      if (config.uniqueArtOnly !== undefined) setUniqueArtOnly(config.uniqueArtOnly);
-      // Clean URL without triggering navigation
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleShare = useCallback(() => {
-    const currentType = masterSetType || 'pokemon-collection';
-    const currentPokemon = selectedPokemon || [];
-    const currentSets = selectedSets || [];
-    const currentVariants = variantFilters || DEFAULT_VARIANT_FILTERS;
-    const currentSort = sortOrder || 'chronological';
-
-    const hasSelection =
-      (currentType === 'official-set' && currentSets.length > 0) ||
-      (currentType === 'pokemon-collection' && currentPokemon.length > 0);
-
-    if (!hasSelection) {
-      toast.error('Add some Pokemon or sets before sharing.');
-      return;
-    }
-
-    const url = buildShareUrl({
-      masterSetType: currentType,
-      selectedPokemon: currentPokemon,
-      selectedSets: currentSets,
-      variantFilters: currentVariants,
-      sortOrder: currentSort,
-      uniqueArtOnly: uniqueArtOnly ?? false,
-    });
-
-    navigator.clipboard.writeText(url).then(() => {
-      toast.success('Link copied to clipboard!');
-    }).catch(() => {
-      toast.error('Failed to copy link.');
-    });
-  }, [masterSetType, selectedPokemon, selectedSets, variantFilters, sortOrder, uniqueArtOnly]);
-
-  useEffect(() => {
-    const fetchCards = async () => {
-      const hasSelection = 
-        (masterSetType === 'official-set' && selectedSets && selectedSets.length > 0) ||
-        (masterSetType === 'pokemon-collection' && selectedPokemon && selectedPokemon.length > 0);
-
-      if (!hasSelection) {
-        setCards([]);
-        return;
-      }
-
-      setIsLoading(true);
-      
-      try {
-        let fetchedCards: PokemonCard[] = [];
-        const currentVariantFilters = variantFilters || DEFAULT_VARIANT_FILTERS;
-
-        if (masterSetType === 'official-set' && selectedSets) {
-          const promises = selectedSets.map(setCode => fetchCardsForSet(setCode));
-          const results = await Promise.all(promises);
-          fetchedCards = results.flat();
-        } else if (selectedPokemon) {
-          const includeCameos = currentVariantFilters.cameo;
-          const promises = selectedPokemon.map(pokemon => fetchCardsForPokemon(pokemon, includeCameos));
-          const results = await Promise.all(promises);
-          fetchedCards = results.flat();
-        }
-        
-        const filteredCards = deduplicateCards(fetchedCards).filter(card => {
-          if (card.variant === 'normal' && card.isHolo) {
-            return currentVariantFilters.holo;
-          }
-          
-          switch (card.variant) {
-            case 'normal':
-              return currentVariantFilters.normal;
-            case 'holo':
-              return currentVariantFilters.holo;
-            case 'reverse-holo':
-              return currentVariantFilters.reverseHolo;
-            case 'full-art':
-              return currentVariantFilters.fullArt;
-            case 'secret-rare':
-              return currentVariantFilters.secretRare;
-            case 'rainbow-rare':
-              return currentVariantFilters.rainbowRare;
-            case 'gold':
-              return currentVariantFilters.gold;
-            case 'promo':
-              return currentVariantFilters.promo;
-            case 'collab':
-              return currentVariantFilters.collab;
-            case 'tournament':
-              return currentVariantFilters.tournament;
-            case 'cameo':
-              return currentVariantFilters.cameo;
-            default:
-              return true;
-          }
-        });
-
-        // When "unique art only" is enabled, collapse cards with the same
-        // base card ID (setCode + number) into one entry per unique artwork.
-        // This gives "one of each card number" without variant duplication.
-        let cardsToSort = filteredCards;
-        if (uniqueArtOnly) {
-          const seen = new Map<string, PokemonCard>();
-          for (const card of filteredCards) {
-            // Key by the base card ID (strip variant suffix like "-reverseHolofoil")
-            const baseId = card.id.replace(/-(?:normal|reverseHolofoil|holofoil|1stEditionHolofoil|1stEditionNormal|unlimitedHolofoil)$/, '');
-            if (!seen.has(baseId)) {
-              seen.set(baseId, card);
-            }
-          }
-          cardsToSort = Array.from(seen.values());
-        }
-
-        let sorted: PokemonCard[];
-        const currentSort = sortOrder || 'chronological';
-        if (currentSort === 'evolution-chain') {
-          sorted = await sortByEvolutionChainAsync(cardsToSort, selectedPokemon || []);
-        } else if (currentSort === 'grouped-by-pokemon') {
-          sorted = await sortGroupedByPokemonAsync(cardsToSort, selectedPokemon || []);
-        } else {
-          sorted = sortCards(cardsToSort, currentSort);
-        }
-        setCards(sorted);
-      } catch (error) {
-        console.error('Error fetching cards:', error);
-        toast.error('Failed to load cards. Please try again.');
-        setCards([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchCards();
-  }, [masterSetType, variantFilters, sortOrder, selectedPokemon, selectedSets, uniqueArtOnly]);
 
   const handleLoadSetlist = (setlist: SavedSetlist) => {
-    setMasterSetType(setlist.type);
-    setVariantFilters(setlist.variantFilters);
-    setSortOrder(setlist.sortOrder);
-    setSelectedPokemon(setlist.selectedPokemon);
-    setSelectedSets(setlist.selectedSets);
+    loadSetlist(setlist);
     setActiveTab('builder');
   };
-
-  const checklistName = 
-    masterSetType === 'official-set' && selectedSets
-      ? (selectedSets.length === 1 ? selectedSets[0] : `${selectedSets.length} Sets`)
-      : selectedPokemon
-      ? (selectedPokemon.length === 1 ? selectedPokemon[0] : `${selectedPokemon.length} Pokemon`)
-      : 'Checklist';
-
-  // Deterministic key for checklist storage based on actual selection, not just count.
-  // This prevents "3 Pokemon" from sharing checked state across different selections.
-  const checklistKey =
-    masterSetType === 'official-set' && selectedSets
-      ? `set:${[...selectedSets].sort().join(',')}`
-      : selectedPokemon
-      ? `pokemon:${[...selectedPokemon].sort().join(',')}`
-      : 'empty';
-
-  const canViewChecklist = cards.length > 0;
-
-  // Detect when variant expansion data is unavailable (no TCGPlayer pricing)
-  const cardsWithoutVariantData = cards.filter(c => !c.prices && !c.artVariant);
-  const missingVariantData = canViewChecklist && !(uniqueArtOnly ?? false) &&
-    cardsWithoutVariantData.length > cards.length * 0.5;
 
   return (
     <div className="min-h-screen bg-background">

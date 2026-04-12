@@ -7,7 +7,7 @@ import { getDexNumber, getSpecies, searchSpecies } from './pokeApi';
 const API_BASE_URL = 'https://api.pokemontcg.io/v2';
 
 // Bump when mapTCGCardToCards output shape changes to invalidate cached results
-const CARD_CACHE_VERSION = 3;
+const CARD_CACHE_VERSION = 4;
 
 export interface TCGCard {
   id: string;
@@ -157,6 +157,10 @@ export async function mapTCGCardToCards(tcgCard: TCGCard, pokemonDisplayName?: s
       marketPrice: priceData?.market ?? priceData?.mid,
       prices: priceData ? { low: priceData.low, mid: priceData.mid, market: priceData.market, high: priceData.high } : undefined,
       tcgPlayerUrl: tcgCard.tcgplayer?.url,
+      artist: tcgCard.artist,
+      supertype: tcgCard.supertype,
+      subtypes: tcgCard.subtypes,
+      nationalDexNumber: tcgCard.nationalPokedexNumbers?.[0],
     }];
   }
 
@@ -186,6 +190,10 @@ export async function mapTCGCardToCards(tcgCard: TCGCard, pokemonDisplayName?: s
       marketPrice: priceData?.market ?? priceData?.mid,
       prices: { low: priceData.low, mid: priceData.mid, market: priceData.market, high: priceData.high },
       tcgPlayerUrl: tcgCard.tcgplayer?.url,
+      artist: tcgCard.artist,
+      supertype: tcgCard.supertype,
+      subtypes: tcgCard.subtypes,
+      nationalDexNumber: tcgCard.nationalPokedexNumbers?.[0],
     };
   });
 }
@@ -196,6 +204,9 @@ export function mapTCGSetToSet(tcgSet: TCGSet): PokemonSet {
     name: tcgSet.name,
     releaseDate: tcgSet.releaseDate,
     totalCards: tcgSet.total,
+    series: tcgSet.series,
+    symbolUrl: tcgSet.images.symbol,
+    logoUrl: tcgSet.images.logo,
   };
 }
 
