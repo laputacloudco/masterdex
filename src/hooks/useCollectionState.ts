@@ -284,13 +284,16 @@ export function useCollectionState() {
         ? window.localStorage.getItem(`${STORAGE_PREFIX}${setlistKey}`)
         : null;
     if (rawSetlistProgress === null) {
-      const dynamicKey = computeDynamicChecklistKey(
+      const dynamicKeyBase = computeDynamicChecklistKey(
         setlist.type,
         setlist.selectedPokemon,
         setlist.selectedSets,
         setlist.selectedTypes || [],
         setlist.selectedArtists || [],
       );
+      const dynamicKey = setlist.uniqueArtOnly
+        ? `${dynamicKeyBase}:unique`
+        : dynamicKeyBase;
       const legacy = readCheckedCards(dynamicKey);
       if (legacy && legacy.length > 0) {
         writeCheckedCards(setlistKey, legacy);
@@ -327,13 +330,16 @@ export function useCollectionState() {
 
     // Activate the new setlist and migrate any existing progress
     setActiveSetlistId(newSetlist.id);
-    const dynamicKey = computeDynamicChecklistKey(
+    const dynamicKeyBase = computeDynamicChecklistKey(
       newSetlist.type,
       newSetlist.selectedPokemon,
       newSetlist.selectedSets,
       newSetlist.selectedTypes || [],
       newSetlist.selectedArtists || [],
     );
+    const dynamicKey = newSetlist.uniqueArtOnly
+      ? `${dynamicKeyBase}:unique`
+      : dynamicKeyBase;
     const legacy = readCheckedCards(dynamicKey);
     if (legacy && legacy.length > 0) {
       writeCheckedCards(`setlist:${newSetlist.id}`, legacy);
@@ -391,7 +397,7 @@ export function useCollectionState() {
       : 'Checklist';
 
   // Stable key when a setlist is active; dynamic key otherwise
-  const checklistKey = activeSetlistId
+  const checklistKeyBase = activeSetlistId
     ? `setlist:${activeSetlistId}`
     : computeDynamicChecklistKey(
         masterSetType || 'pokemon-collection',
@@ -400,6 +406,8 @@ export function useCollectionState() {
         selectedTypes || [],
         selectedArtists || [],
       );
+
+  const checklistKey = uniqueArtOnly ? `${checklistKeyBase}:unique` : checklistKeyBase;
 
   const canViewChecklist = cards.length > 0;
 

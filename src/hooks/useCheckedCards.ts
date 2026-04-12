@@ -37,13 +37,6 @@ export function useCheckedCards(storageKey: string) {
     [setCheckedCardIds],
   );
 
-  const replaceAll = useCallback(
-    (ids: string[]) => {
-      setCheckedCardIds(ids);
-    },
-    [setCheckedCardIds],
-  );
-
   const checkedCount = checkedSet.size;
 
   return {
@@ -52,6 +45,5 @@ export function useCheckedCards(storageKey: string) {
     checkedCount,
     isChecked,
     toggle,
-    replaceAll,
   } as const;
 }
