@@ -190,13 +190,13 @@ function App() {
       {/* Show Mode full-screen dialog */}
       <Dialog open={showModeOpen} onOpenChange={setShowModeOpen}>
         <DialogContent
-          className="max-w-none sm:max-w-none w-screen h-screen max-h-screen rounded-none border-none p-0 overflow-y-auto"
+          className="inset-0 top-0 left-0 translate-x-0 translate-y-0 max-w-none sm:max-w-none w-full h-full max-h-full rounded-none border-none p-0 gap-0 overflow-y-auto"
           hideCloseButton
           onInteractOutside={(e) => e.preventDefault()}
           onEscapeKeyDown={(e) => e.preventDefault()}
         >
           <DialogTitle className="sr-only">Show Mode — {checklistName}</DialogTitle>
-          <div className="p-4 pb-8">
+          <div className="px-3 pt-3 pb-8 sm:px-4 sm:pt-4">
             <ShowView
               cards={cards}
               setName={checklistName}
