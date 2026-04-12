@@ -7,7 +7,7 @@ import { getDexNumber, getSpecies, searchSpecies } from './pokeApi';
 const API_BASE_URL = 'https://api.pokemontcg.io/v2';
 
 // Bump when mapTCGCardToCards output shape changes to invalidate cached results
-const CARD_CACHE_VERSION = 4;
+const CARD_CACHE_VERSION = 5;
 
 export interface TCGCard {
   id: string;
@@ -144,6 +144,7 @@ export async function mapTCGCardToCards(tcgCard: TCGCard, pokemonDisplayName?: s
     const priceData = tcgPriceTypes[0]?.[1];
     return [{
       id: tcgCard.id,
+      tcgId: tcgCard.id,
       name: tcgCard.name,
       pokemonName: resolvedName,
       setName: tcgCard.set.name,
@@ -177,6 +178,7 @@ export async function mapTCGCardToCards(tcgCard: TCGCard, pokemonDisplayName?: s
 
     return {
       id: `${tcgCard.id}-${priceType}`,
+      tcgId: tcgCard.id,
       name: tcgCard.name,
       pokemonName: resolvedName,
       setName: tcgCard.set.name,

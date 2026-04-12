@@ -22,6 +22,7 @@ export type CardCondition = 'near-mint' | 'lightly-played' | 'moderately-played'
 
 export interface PokemonCard {
   id: string;
+  tcgId?: string;
   name: string;
   pokemonName: string;
   setName: string;
