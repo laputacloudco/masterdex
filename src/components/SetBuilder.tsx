@@ -143,16 +143,16 @@ export function SetBuilder({
         </CardHeader>
         <CardContent>
           <RadioGroup value={currentMasterSetType} onValueChange={(v) => setMasterSetType(v as MasterSetType)}>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 min-h-[44px]">
               <RadioGroupItem value="official-set" id="official-set" />
-              <Label htmlFor="official-set" className="cursor-pointer">
-                Official Set - All cards from a specific set release
+              <Label htmlFor="official-set" className="cursor-pointer text-sm sm:text-base">
+                Official Set — All cards from a specific set release
               </Label>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 min-h-[44px]">
               <RadioGroupItem value="pokemon-collection" id="pokemon-collection" />
-              <Label htmlFor="pokemon-collection" className="cursor-pointer">
-                Pokemon Collection - All cards featuring specific Pokemon
+              <Label htmlFor="pokemon-collection" className="cursor-pointer text-sm sm:text-base">
+                Pokemon Collection — All cards featuring specific Pokemon
               </Label>
             </div>
           </RadioGroup>
@@ -171,7 +171,7 @@ export function SetBuilder({
                 variant="outline"
                 size="sm"
                 onClick={applyCommonPreset}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 min-h-[44px]"
               >
                 <span>Common Only</span>
               </Button>
@@ -179,7 +179,7 @@ export function SetBuilder({
                 variant="outline"
                 size="sm"
                 onClick={applyRarePreset}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 min-h-[44px]"
               >
                 <Star size={16} weight="fill" />
                 <span>Rare Only</span>
@@ -188,7 +188,7 @@ export function SetBuilder({
                 variant="outline"
                 size="sm"
                 onClick={selectAll}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 min-h-[44px]"
               >
                 <span>Select All</span>
               </Button>
@@ -196,7 +196,7 @@ export function SetBuilder({
                 variant="outline"
                 size="sm"
                 onClick={clearAll}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 min-h-[44px]"
               >
                 <span>Clear All</span>
               </Button>
@@ -476,7 +476,7 @@ export function SetBuilder({
         </CardHeader>
         <CardContent>
           <Select value={currentSortOrder} onValueChange={(v) => setSortOrder(v as SortOrder)}>
-            <SelectTrigger>
+            <SelectTrigger className="min-h-[44px] w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -514,7 +514,7 @@ export function SetBuilder({
         >
           <CardContent className="pt-6">
             <div className="flex items-center justify-center gap-2">
-              <Badge variant="secondary" className="text-base px-4 py-2">
+              <Badge variant="secondary" className="text-sm sm:text-base px-4 py-2 w-full sm:w-auto text-center min-h-[44px] flex items-center justify-center">
                 {cardCount} cards loaded — view checklist →
               </Badge>
             </div>
