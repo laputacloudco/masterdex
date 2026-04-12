@@ -422,7 +422,7 @@ export async function searchArtists(query: string): Promise<string[]> {
   // Escape Lucene reserved characters in user input before building the query.
   const hasSpace = normalized.includes(' ');
   const artistQuery = hasSpace
-    ? `artist:"${normalized.replace(/"/g, '\\"')}"`
+    ? `artist:"${normalized.replace(/[\\"]/g, '\\$&')}"`
     : `artist:${normalized.replace(/[\\+\-!(){}[\]^"~*?:/]/g, '\\$&')}*`;
   const url = `${API_BASE_URL}/cards?q=${encodeURIComponent(artistQuery)}&pageSize=100&select=artist`;
   const json = await scheduledFetchJson<{ data?: TCGCard[] }>(url);
