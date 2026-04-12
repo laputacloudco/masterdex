@@ -212,10 +212,15 @@ async function fetchAllPages(baseUrl: string): Promise<TCGCard[]> {
   while (true) {
     const url = `${baseUrl}&page=${page}&pageSize=250`;
     const response = await scheduledFetch(url);
-    const data = await response.json();
-    allCards = allCards.concat(data.data || []);
+    const json = await response.json();
+    const cards = json.data || [];
+    allCards = allCards.concat(cards);
 
-    if (!data.totalPages || page >= data.totalPages) break;
+    // TCG API returns: page, pageSize, count, totalCount
+    const totalCount = json.totalCount || 0;
+    const pageSize = json.pageSize || 250;
+    const totalPages = Math.ceil(totalCount / pageSize);
+    if (page >= totalPages) break;
     page++;
   }
 
