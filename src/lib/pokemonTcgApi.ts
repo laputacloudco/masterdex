@@ -1,7 +1,7 @@
 import type { PokemonCard, PokemonSet, CardVariant } from './types';
 import { getCameoCardsForPokemon, type CameoEntry } from './cameoData';
 import { cacheGet, cacheSet, CACHE_TTL } from './apiCache';
-import { scheduledFetch } from './requestScheduler';
+import { scheduledFetchJson } from './requestScheduler';
 import { getDexNumber, getSpecies, searchSpecies } from './pokeApi';
 
 const API_BASE_URL = 'https://api.pokemontcg.io/v2';
@@ -211,12 +211,10 @@ async function fetchAllPages(baseUrl: string): Promise<TCGCard[]> {
 
   while (true) {
     const url = `${baseUrl}&page=${page}&pageSize=250`;
-    const response = await scheduledFetch(url);
-    const json = await response.json();
+    const json = await scheduledFetchJson<{ data?: TCGCard[]; totalCount?: number; pageSize?: number }>(url);
     const cards = json.data || [];
     allCards = allCards.concat(cards);
 
-    // TCG API returns: page, pageSize, count, totalCount
     const totalCount = json.totalCount || 0;
     const pageSize = json.pageSize || 250;
     const totalPages = Math.ceil(totalCount / pageSize);
@@ -232,8 +230,7 @@ export async function fetchAllSets(): Promise<PokemonSet[]> {
   const cached = await cacheGet<PokemonSet[]>(cacheKey);
   if (cached) return cached;
 
-  const response = await scheduledFetch(`${API_BASE_URL}/sets?orderBy=releaseDate`);
-  const data = await response.json();
+  const data = await scheduledFetchJson<{ data: TCGSet[] }>(`${API_BASE_URL}/sets?orderBy=releaseDate`);
   const sets = (data.data as TCGSet[]).map(mapTCGSetToSet);
 
   await cacheSet(cacheKey, sets, CACHE_TTL.TCG_SETS);
@@ -305,9 +302,8 @@ async function fetchCameoCards(cameoEntries: CameoEntry[]): Promise<PokemonCard[
           ? `name:"${entry.cardName}" set.name:"${entry.setName}"`
           : `name:"${entry.cardName}"`;
         const url = `${API_BASE_URL}/cards?q=${encodeURIComponent(query)}&pageSize=1`;
-        const response = await scheduledFetch(url);
-        const data = await response.json();
-        if (data.data?.length > 0) {
+        const data = await scheduledFetchJson<{ data?: TCGCard[] }>(url);
+        if (data.data?.length) {
           const cards = await mapTCGCardToCards(data.data[0]);
           if (cards.length > 0) {
             cards[0].variant = 'cameo';
@@ -317,8 +313,9 @@ async function fetchCameoCards(cameoEntries: CameoEntry[]): Promise<PokemonCard[
         continue;
       }
 
-      const response = await scheduledFetch(`${API_BASE_URL}/cards/${entry.cardId}`);
-      const data = await response.json();
+      const data = await scheduledFetchJson<{ data?: TCGCard }>(
+        `${API_BASE_URL}/cards/${entry.cardId}`
+      );
       if (!data.data?.set) continue;
       const cards = await mapTCGCardToCards(data.data);
       if (cards.length > 0) {
