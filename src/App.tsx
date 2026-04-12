@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useKV } from '@/hooks/useKV';
 import type { PokemonCard, MasterSetType, SortOrder, SavedSetlist, VariantFilters } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,7 +11,10 @@ import { CameoBrowser } from '@/components/CameoBrowser';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { fetchCardsForSet, fetchCardsForPokemon, deduplicateCards } from '@/lib/pokemonTcgApi';
 import { sortCards, sortByEvolutionChainAsync, sortGroupedByPokemonAsync } from '@/lib/cardUtils';
+import { buildShareUrl, parseShareUrl } from '@/lib/shareUrl';
 import { toast } from 'sonner';
+import { ShareNetwork } from '@phosphor-icons/react';
+import { Button } from '@/components/ui/button';
 
 const DEFAULT_VARIANT_FILTERS: VariantFilters = {
   normal: true,
@@ -37,6 +40,55 @@ function App() {
   const [cards, setCards] = useState<PokemonCard[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('builder');
+  const urlApplied = useRef(false);
+
+  // On mount, parse URL query params and apply shared config
+  useEffect(() => {
+    if (urlApplied.current) return;
+    urlApplied.current = true;
+
+    const config = parseShareUrl(window.location.search);
+    if (config) {
+      setMasterSetType(config.masterSetType);
+      setVariantFilters(config.variantFilters);
+      setSortOrder(config.sortOrder);
+      setSelectedPokemon(config.selectedPokemon);
+      setSelectedSets(config.selectedSets);
+      // Clean URL without triggering navigation
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleShare = useCallback(() => {
+    const currentType = masterSetType || 'pokemon-collection';
+    const currentPokemon = selectedPokemon || [];
+    const currentSets = selectedSets || [];
+    const currentVariants = variantFilters || DEFAULT_VARIANT_FILTERS;
+    const currentSort = sortOrder || 'chronological';
+
+    const hasSelection =
+      (currentType === 'official-set' && currentSets.length > 0) ||
+      (currentType === 'pokemon-collection' && currentPokemon.length > 0);
+
+    if (!hasSelection) {
+      toast.error('Add some Pokemon or sets before sharing.');
+      return;
+    }
+
+    const url = buildShareUrl({
+      masterSetType: currentType,
+      selectedPokemon: currentPokemon,
+      selectedSets: currentSets,
+      variantFilters: currentVariants,
+      sortOrder: currentSort,
+    });
+
+    navigator.clipboard.writeText(url).then(() => {
+      toast.success('Link copied to clipboard!');
+    }).catch(() => {
+      toast.error('Failed to copy link.');
+    });
+  }, [masterSetType, selectedPokemon, selectedSets, variantFilters, sortOrder]);
 
   useEffect(() => {
     const fetchCards = async () => {
@@ -142,31 +194,40 @@ function App() {
   return (
     <div className="min-h-screen bg-background">
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,var(--gradient-start),transparent_50%),radial-gradient(ellipse_at_bottom_right,var(--gradient-end),transparent_50%)]" />
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        <header className="mb-10 relative">
-          <div className="absolute right-0 top-0">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-7xl">
+        <header className="mb-6 sm:mb-10 relative">
+          <div className="absolute right-0 top-0 flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleShare}
+              title="Share setlist configuration"
+            >
+              <ShareNetwork size={20} />
+            </Button>
             <ThemeToggle />
           </div>
-          <div className="text-center pt-2">
-            <h1 className="text-5xl md:text-6xl font-bold mb-3 bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent tracking-tight">
+          <div className="text-center pt-2 pr-10 sm:pr-0">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold mb-2 sm:mb-3 bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent tracking-tight">
               Pokomplete
             </h1>
-            <p className="text-base text-muted-foreground max-w-lg mx-auto">
+            <p className="text-sm sm:text-base text-muted-foreground max-w-lg mx-auto">
               Build comprehensive checklists for your Pokémon card collection
             </p>
           </div>
         </header>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-3 mb-2">
-            <TabsTrigger value="builder">Build Set</TabsTrigger>
-            <TabsTrigger value="checklist" disabled={!canViewChecklist}>
+          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-4 mb-2 h-auto">
+            <TabsTrigger value="builder" className="min-h-[44px] text-xs sm:text-sm px-1 sm:px-3">Build Set</TabsTrigger>
+            <TabsTrigger value="checklist" disabled={!canViewChecklist} className="min-h-[44px] text-xs sm:text-sm px-1 sm:px-3">
               Checklist {canViewChecklist && `(${cards.length})`}
             </TabsTrigger>
-            <TabsTrigger value="cameos">Cameo Database</TabsTrigger>
+            <TabsTrigger value="binder" disabled={!canViewChecklist} className="min-h-[44px] text-xs sm:text-sm px-1 sm:px-3">Binder</TabsTrigger>
+            <TabsTrigger value="cameos" className="min-h-[44px] text-xs sm:text-sm px-1 sm:px-3">Cameo Database</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="builder" className="mt-8">
+          <TabsContent value="builder" className="mt-4 sm:mt-8">
             <div className="max-w-3xl mx-auto">
               <div className="space-y-6">
                 <SavedSetlists
@@ -200,7 +261,7 @@ function App() {
             </div>
           </TabsContent>
 
-          <TabsContent value="checklist" className="mt-8">
+          <TabsContent value="checklist" className="mt-4 sm:mt-8">
             {canViewChecklist && (
               <div className="max-w-4xl mx-auto space-y-6">
                 <VariantStatistics cards={cards} />
@@ -210,7 +271,15 @@ function App() {
             )}
           </TabsContent>
 
-          <TabsContent value="cameos" className="mt-8">
+          <TabsContent value="binder" className="mt-4 sm:mt-8">
+            {canViewChecklist && (
+              <div className="max-w-4xl mx-auto">
+                <BinderView cards={cards} setName={checklistName} />
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="cameos" className="mt-4 sm:mt-8">
             <div className="max-w-5xl mx-auto">
               <CameoBrowser />
             </div>
