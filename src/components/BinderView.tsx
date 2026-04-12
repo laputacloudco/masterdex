@@ -1,10 +1,10 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useCheckedCards } from '@/hooks/useCheckedCards';
 import type { PokemonCard } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CaretLeft, CaretRight, CheckCircle } from '@phosphor-icons/react';
+import { CaretLeft, CaretRight, CheckCircle, Printer } from '@phosphor-icons/react';
 import { CardPreview } from './CardPreview';
 import { formatCardName } from '@/lib/cardUtils';
 
@@ -15,18 +15,23 @@ interface BinderViewProps {
   cardsPerPage?: number;
 }
 
-const DESKTOP_COLS = 3;
-const DESKTOP_ROWS = 3;
-const MOBILE_COLS = 2;
-const MOBILE_ROWS = 3;
+function getGridLayout(cardsPerPage: number): { cols: number; rows: number } {
+  switch (cardsPerPage) {
+    case 4: return { cols: 2, rows: 2 };
+    case 12: return { cols: 3, rows: 4 };
+    case 9:
+    default: return { cols: 3, rows: 3 };
+  }
+}
 
-/** Grid dimensions for each supported cards-per-page value. */
-const PAGE_LAYOUT: Record<number, { cols: number; rows: number }> = {
-  4:  { cols: 2, rows: 2 },
-  9:  { cols: 3, rows: 3 },
-  12: { cols: 3, rows: 4 },
-  16: { cols: 4, rows: 4 },
-};
+function getMobileLayout(cardsPerPage: number): { cols: number; rows: number } {
+  switch (cardsPerPage) {
+    case 4: return { cols: 2, rows: 2 };
+    case 12: return { cols: 2, rows: 6 };
+    case 9:
+    default: return { cols: 2, rows: 5 };
+  }
+}
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(() =>
@@ -44,16 +49,78 @@ function useIsMobile() {
   return isMobile;
 }
 
-export function BinderView({ cards, setName, storageKey, cardsPerPage: cardsPerPageProp }: BinderViewProps) {
+function buildPrintHTML(cards: PokemonCard[], setName: string, cardsPerPage: number): string {
+  const { cols, rows } = getGridLayout(cardsPerPage);
+  const totalPages = Math.max(1, Math.ceil(cards.length / cardsPerPage));
+
+  let pagesHTML = '';
+  for (let p = 0; p < totalPages; p++) {
+    const start = p * cardsPerPage;
+    const pageCards = cards.slice(start, start + cardsPerPage);
+
+    let cellsHTML = '';
+    for (let i = 0; i < cardsPerPage; i++) {
+      const card = pageCards[i];
+      if (card) {
+        const label = `${card.pokemonName} · ${card.setCode} #${card.setNumber}`;
+        cellsHTML += card.imageUrl
+          ? `<div class="cell">
+              <img src="${card.imageUrl}" alt="${card.name}" />
+              <div class="label">${label}</div>
+            </div>`
+          : `<div class="cell empty-card">
+              <div class="placeholder">${label}</div>
+            </div>`;
+      } else {
+        cellsHTML += '<div class="cell empty-slot"></div>';
+      }
+    }
+
+    pagesHTML += `
+      <div class="page">
+        <div class="page-header">Binder Page ${p + 1} of ${totalPages} — ${setName}</div>
+        <div class="grid" style="grid-template-columns: repeat(${cols}, 1fr); grid-template-rows: repeat(${rows}, 1fr);">
+          ${cellsHTML}
+        </div>
+      </div>`;
+  }
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Print Binder — ${setName}</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: #fff; color: #000; }
+  @page { size: portrait; margin: 0.4in; }
+  .page { page-break-after: always; width: 100%; height: 100vh; display: flex; flex-direction: column; padding: 0; }
+  .page:last-child { page-break-after: avoid; }
+  .page-header { text-align: center; font-size: 10pt; color: #666; padding: 4px 0 8px; flex-shrink: 0; }
+  .grid { flex: 1; display: grid; gap: 6px; }
+  .cell { border: 1px solid #ccc; border-radius: 4px; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 0; }
+  .cell img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .cell .label { font-size: 7pt; color: #555; text-align: center; padding: 1px 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; flex-shrink: 0; }
+  .empty-slot { border: 1px dashed #ddd; background: #fafafa; }
+  .empty-card { border: 1px solid #ccc; background: #f5f5f5; }
+  .placeholder { font-size: 8pt; color: #999; text-align: center; padding: 8px; }
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { height: 100vh; }
+  }
+</style>
+</head>
+<body>${pagesHTML}</body>
+</html>`;
+}
+
+export function BinderView({ cards, setName, storageKey, cardsPerPage: cardsPerPageProp = 9 }: BinderViewProps) {
   const { isChecked } = useCheckedCards(storageKey || setName);
   const [currentPage, setCurrentPage] = useState(0);
   const isMobile = useIsMobile();
 
-  // When a specific layout is requested via prop, use it; otherwise fall back to responsive defaults.
-  const layout = cardsPerPageProp != null ? PAGE_LAYOUT[cardsPerPageProp] : undefined;
-  const cols = layout?.cols ?? (isMobile ? MOBILE_COLS : DESKTOP_COLS);
-  const rows = layout?.rows ?? (isMobile ? MOBILE_ROWS : DESKTOP_ROWS);
-  const cardsPerPage = cols * rows;
+  const { cols } = isMobile ? getMobileLayout(cardsPerPageProp) : getGridLayout(cardsPerPageProp);
+  const cardsPerPage = isMobile ? getMobileLayout(cardsPerPageProp).cols * getMobileLayout(cardsPerPageProp).rows : cardsPerPageProp;
 
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(cards.length / cardsPerPage)),
@@ -78,12 +145,35 @@ export function BinderView({ cards, setName, storageKey, cardsPerPage: cardsPerP
   const goToPrevious = () => setCurrentPage((p) => Math.max(0, p - 1));
   const goToNext = () => setCurrentPage((p) => Math.min(totalPages - 1, p + 1));
 
+  const handlePrint = useCallback(() => {
+    const html = buildPrintHTML(cards, setName, cardsPerPageProp);
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    printWindow.document.write(html);
+    printWindow.document.close();
+    // Wait for images to load before triggering print
+    printWindow.onload = () => {
+      printWindow.focus();
+      printWindow.print();
+    };
+  }, [cards, setName, cardsPerPageProp]);
+
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-2xl">Binder View</CardTitle>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePrint}
+              disabled={cards.length === 0}
+              title="Print all binder pages"
+            >
+              <Printer weight="bold" className="mr-1" size={16} />
+              Print
+            </Button>
             <Button
               variant="outline"
               size="icon"
