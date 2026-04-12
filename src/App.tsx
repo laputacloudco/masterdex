@@ -190,6 +190,15 @@ function App() {
       ? (selectedPokemon.length === 1 ? selectedPokemon[0] : `${selectedPokemon.length} Pokemon`)
       : 'Checklist';
 
+  // Deterministic key for checklist storage based on actual selection, not just count.
+  // This prevents "3 Pokemon" from sharing checked state across different selections.
+  const checklistKey =
+    masterSetType === 'official-set' && selectedSets
+      ? `set:${[...selectedSets].sort().join(',')}`
+      : selectedPokemon
+      ? `pokemon:${[...selectedPokemon].sort().join(',')}`
+      : 'empty';
+
   const canViewChecklist = cards.length > 0;
 
   return (
@@ -265,7 +274,7 @@ function App() {
           <TabsContent value="checklist" className="mt-4 sm:mt-8">
             {canViewChecklist && (
               <div className="max-w-4xl mx-auto space-y-6">
-                <Checklist cards={cards} setName={checklistName} />
+                <Checklist cards={cards} setName={checklistName} storageKey={checklistKey} />
                 <VariantStatistics cards={cards} />
               </div>
             )}
@@ -275,7 +284,7 @@ function App() {
             {canViewChecklist && (
               <div className="max-w-4xl mx-auto space-y-6">
                 <BinderCalculator cardCount={cards.length} />
-                <BinderView cards={cards} setName={checklistName} />
+                <BinderView cards={cards} setName={checklistName} storageKey={checklistKey} />
               </div>
             )}
           </TabsContent>

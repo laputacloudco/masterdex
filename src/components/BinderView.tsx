@@ -11,6 +11,7 @@ import { formatCardName } from '@/lib/cardUtils';
 interface BinderViewProps {
   cards: PokemonCard[];
   setName: string;
+  storageKey?: string;
 }
 
 const DESKTOP_COLS = 3;
@@ -34,8 +35,8 @@ function useIsMobile() {
   return isMobile;
 }
 
-export function BinderView({ cards, setName }: BinderViewProps) {
-  const [checkedCards] = useKV<string[]>(`checklist-${setName}`, []);
+export function BinderView({ cards, setName, storageKey }: BinderViewProps) {
+  const [checkedCards] = useKV<string[]>(`checklist-${storageKey || setName}`, []);
   const [currentPage, setCurrentPage] = useState(0);
   const isMobile = useIsMobile();
 
