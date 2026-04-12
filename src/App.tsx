@@ -7,6 +7,7 @@ import { Checklist } from '@/components/Checklist';
 import { SavedSetlists } from '@/components/SavedSetlists';
 import { VariantStatistics } from '@/components/VariantStatistics';
 import { BinderCalculator } from '@/components/BinderCalculator';
+import { BinderView } from '@/components/BinderView';
 import { CameoBrowser } from '@/components/CameoBrowser';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { fetchCardsForSet, fetchCardsForPokemon, deduplicateCards } from '@/lib/pokemonTcgApi';
@@ -218,12 +219,13 @@ function App() {
         </header>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-3 mb-2 h-auto">
+          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-4 mb-2 h-auto">
             <TabsTrigger value="builder" className="min-h-[44px] text-xs sm:text-sm px-1 sm:px-3">Build Set</TabsTrigger>
             <TabsTrigger value="checklist" disabled={!canViewChecklist} className="min-h-[44px] text-xs sm:text-sm px-1 sm:px-3">
               Checklist {canViewChecklist && `(${cards.length})`}
             </TabsTrigger>
-            <TabsTrigger value="cameos" className="min-h-[44px] text-xs sm:text-sm px-1 sm:px-3">Cameo Database</TabsTrigger>
+            <TabsTrigger value="binder" disabled={!canViewChecklist} className="min-h-[44px] text-xs sm:text-sm px-1 sm:px-3">Binder</TabsTrigger>
+            <TabsTrigger value="cameos" className="min-h-[44px] text-xs sm:text-sm px-1 sm:px-3">Cameos</TabsTrigger>
           </TabsList>
 
           <TabsContent value="builder" className="mt-4 sm:mt-8">
@@ -266,6 +268,14 @@ function App() {
                 <Checklist cards={cards} setName={checklistName} />
                 <VariantStatistics cards={cards} />
                 <BinderCalculator cardCount={cards.length} />
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="binder" className="mt-4 sm:mt-8">
+            {canViewChecklist && (
+              <div className="max-w-4xl mx-auto">
+                <BinderView cards={cards} setName={checklistName} />
               </div>
             )}
           </TabsContent>
