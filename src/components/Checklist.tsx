@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { Printer, CheckCircle, CurrencyDollar, FilePdf, CaretDown, Cards, UserCircle, ArrowsDownUp, List, GridFour } from '@phosphor-icons/react';
+import { Printer, CheckCircle, CurrencyDollar, FilePdf, CaretDown, Cards, UserCircle, ArrowsDownUp, List, GridFour, ShoppingCart, Storefront } from '@phosphor-icons/react';
 import { formatCardName, getVariantLabel } from '@/lib/cardUtils';
 import { CardPreview } from './CardPreview';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
@@ -16,6 +16,7 @@ import { exportChecklistToPDF, exportPlaceholdersToPDF, exportChecklistToCSV, pr
 import { toast } from 'sonner';
 
 type ViewMode = 'list' | 'gallery';
+type ShowMode = 'all' | 'missing';
 
 type ChecklistSortOrder = 'default' | 'price-high-low' | 'price-low-high' | 'name-a-z' | 'name-z-a';
 
@@ -74,10 +75,26 @@ export function Checklist({ cards, setName, storageKey }: ChecklistProps) {
   const [condition, setCondition] = useState<CardCondition>('near-mint');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [previewCard, setPreviewCard] = useState<PokemonCard | null>(null);
+  const [showMode, setShowMode] = useState<ShowMode>('all');
 
   const sortedCards = useMemo(
     () => sortChecklist(cards, checklistSort, (card) => getPriceForCondition(card, condition) ?? 0),
     [cards, checklistSort, condition]
+  );
+
+  const displayCards = useMemo(
+    () => showMode === 'missing' ? sortedCards.filter(card => !isChecked(card.id)) : sortedCards,
+    [sortedCards, showMode, isChecked]
+  );
+
+  const missingCount = useMemo(
+    () => cards.filter(card => !isChecked(card.id)).length,
+    [cards, isChecked]
+  );
+
+  const missingTotalCost = useMemo(
+    () => cards.filter(card => !isChecked(card.id)).reduce((sum, card) => sum + (getPriceForCondition(card, condition) || 0), 0),
+    [cards, isChecked, condition]
   );
 
   const handleExportPDF = async () => {
@@ -215,6 +232,25 @@ export function Checklist({ cards, setName, storageKey }: ChecklistProps) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
               </DropdownMenu>
+              <div className="flex items-center rounded-md border">
+                <Button
+                  variant={showMode === 'all' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  className="rounded-r-none border-0 h-9 px-3 text-xs"
+                  onClick={() => setShowMode('all')}
+                >
+                  All
+                </Button>
+                <Button
+                  variant={showMode === 'missing' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  className="rounded-l-none border-0 h-9 px-3 text-xs gap-1"
+                  onClick={() => setShowMode('missing')}
+                >
+                  <ShoppingCart size={14} />
+                  Missing
+                </Button>
+              </div>
               <Button
                 variant="ghost"
                 size="icon"
@@ -266,11 +302,33 @@ export function Checklist({ cards, setName, storageKey }: ChecklistProps) {
         </div>
       </CardHeader>
 
+      {showMode === 'missing' && (
+        <div className="mx-6 mb-4 rounded-lg border border-accent/30 bg-accent/5 p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <ShoppingCart size={20} className="text-accent" weight="fill" />
+            <h3 className="font-semibold text-sm">Buy List</h3>
+          </div>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <span className="text-muted-foreground">Missing Cards</span>
+              <p className="font-semibold text-lg">{missingCount}</p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Estimated Cost ({CONDITION_LABELS[condition]})</span>
+              <p className="font-semibold text-lg">${missingTotalCost.toFixed(2)}</p>
+            </div>
+          </div>
+          {missingCount === 0 && (
+            <p className="mt-2 text-sm text-accent font-medium">🎉 Your collection is complete!</p>
+          )}
+        </div>
+      )}
+
       <CardContent>
         <ScrollArea className="h-[600px] pr-4">
           {viewMode === 'list' ? (
             <div className="space-y-2">
-              {sortedCards.map((card) => {
+              {displayCards.map((card) => {
                 const checked = isChecked(card.id);
                 return (
                   <div
@@ -346,17 +404,31 @@ export function Checklist({ cards, setName, storageKey }: ChecklistProps) {
                           const displayPrice = getPriceForCondition(card, condition);
                           if (displayPrice == null || !Number.isFinite(displayPrice)) return null;
                           return card.tcgPlayerUrl ? (
-                            <a
-                              href={card.tcgPlayerUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <Badge variant="outline" className="text-xs font-mono hover:bg-accent/10 cursor-pointer">
+                            showMode === 'missing' ? (
+                              <a
+                                href={card.tcgPlayerUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center gap-1.5 rounded-md bg-accent/15 text-accent hover:bg-accent/25 px-2.5 py-1 text-xs font-medium transition-colors"
+                              >
+                                <Storefront size={14} weight="fill" />
                                 ${displayPrice.toFixed(2)}
-                                <span className="ml-1 text-muted-foreground font-sans">TCGPlayer</span>
-                              </Badge>
-                            </a>
+                                <span className="font-normal">· TCGPlayer</span>
+                              </a>
+                            ) : (
+                              <a
+                                href={card.tcgPlayerUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Badge variant="outline" className="text-xs font-mono hover:bg-accent/10 cursor-pointer">
+                                  ${displayPrice.toFixed(2)}
+                                  <span className="ml-1 text-muted-foreground font-sans">TCGPlayer</span>
+                                </Badge>
+                              </a>
+                            )
                           ) : (
                             <Badge variant="outline" className="text-xs font-mono">
                               ${displayPrice.toFixed(2)}
@@ -375,7 +447,7 @@ export function Checklist({ cards, setName, storageKey }: ChecklistProps) {
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-              {sortedCards.map((card) => {
+              {displayCards.map((card) => {
                 const checked = isChecked(card.id);
                 return (
                   <div
