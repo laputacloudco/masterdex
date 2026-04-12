@@ -584,24 +584,32 @@ export function SetBuilder({
       )}
 
       {!isLoading && cardCount > 0 && (
-        <Card
-          className="bg-primary/10 border-primary/30 cursor-pointer hover:bg-primary/20 transition-colors"
-          onClick={onViewChecklist}
-        >
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-center gap-2">
-              <Badge variant="secondary" className="text-sm sm:text-base px-4 py-2 w-full sm:w-auto text-center min-h-[44px] flex items-center justify-center">
-                {cardCount} cards loaded — view checklist →
-              </Badge>
-            </div>
-            {missingVariantData && (
-              <p className="text-xs text-muted-foreground text-center mt-3">
-                ⚠ Variant data (reverse holo, etc.) is not yet available for this set from TCGPlayer.
-                Only one entry per card number is shown. Variants will appear as pricing data becomes available.
-              </p>
-            )}
-          </CardContent>
-        </Card>
+        <>
+          <Card
+            className="hidden sm:block bg-primary/10 border-primary/30 cursor-pointer hover:bg-primary/20 transition-colors"
+            onClick={onViewChecklist}
+          >
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-center gap-2">
+                <Badge variant="secondary" className="text-sm sm:text-base px-4 py-2 w-full sm:w-auto text-center min-h-[44px] flex items-center justify-center">
+                  {cardCount} cards loaded — view checklist →
+                </Badge>
+              </div>
+              {missingVariantData && (
+                <p className="text-xs text-muted-foreground text-center mt-3">
+                  ⚠ Variant data (reverse holo, etc.) is not yet available for this set from TCGPlayer.
+                  Only one entry per card number is shown. Variants will appear as pricing data becomes available.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+          {missingVariantData && (
+            <p className="sm:hidden text-xs text-muted-foreground text-center">
+              ⚠ Variant data (reverse holo, etc.) is not yet available for this set from TCGPlayer.
+              Only one entry per card number is shown. Variants will appear as pricing data becomes available.
+            </p>
+          )}
+        </>
       )}
     </div>
   );

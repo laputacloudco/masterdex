@@ -11,7 +11,7 @@ import { CameoBrowser } from '@/components/CameoBrowser';
 import { ComparisonView } from '@/components/ComparisonView';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Footer } from '@/components/Footer';
-import { ShareNetwork } from '@phosphor-icons/react';
+import { ShareNetwork, ClipboardText } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import { useCollectionState } from '@/hooks/useCollectionState';
 
@@ -77,7 +77,7 @@ function App() {
 
           <TabsContent value="builder" className="mt-4 sm:mt-8">
             <div className="max-w-3xl mx-auto">
-              <div className="space-y-6">
+              <div className="space-y-6 pb-24 sm:pb-0">
                 <SavedSetlists
                   currentConfig={{
                     masterSetType,
@@ -149,6 +149,18 @@ function App() {
           </TabsContent>
         </Tabs>
       </div>
+      {/* Floating checklist button — mobile only, shown when cards are loaded on the builder tab */}
+      {canViewChecklist && activeTab === 'builder' && (
+        <div className="fixed bottom-6 left-0 right-0 flex justify-center z-50 sm:hidden px-4 pointer-events-none">
+          <Button
+            onClick={() => setActiveTab('checklist')}
+            className="shadow-xl rounded-full px-6 h-12 text-sm font-semibold gap-2 pointer-events-auto"
+          >
+            <ClipboardText size={18} weight="bold" />
+            {cards.length} cards — View Checklist →
+          </Button>
+        </div>
+      )}
       <Footer />
     </div>
   );
