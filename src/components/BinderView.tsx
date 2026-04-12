@@ -4,9 +4,12 @@ import type { PokemonCard } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CaretLeft, CaretRight, CheckCircle, Printer } from '@phosphor-icons/react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { CaretDown, CaretLeft, CaretRight, Cards, CheckCircle, Printer } from '@phosphor-icons/react';
 import { CardPreview } from './CardPreview';
 import { formatCardName } from '@/lib/cardUtils';
+import { exportPlaceholdersToPDF } from '@/lib/exportUtils';
+import { toast } from 'sonner';
 
 interface BinderViewProps {
   cards: PokemonCard[];
@@ -158,22 +161,66 @@ export function BinderView({ cards, setName, storageKey, cardsPerPage: cardsPerP
     };
   }, [cards, setName, cardsPerPageProp]);
 
+  const handleExportProxies = useCallback(async () => {
+    try {
+      await exportPlaceholdersToPDF(cards, setName);
+      toast.success('Placeholders exported to PDF!');
+    } catch (error) {
+      console.error('Failed to export placeholders:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to export placeholders');
+    }
+  }, [cards, setName]);
+
+  const handleExportMissingProxies = useCallback(async () => {
+    const missingCards = cards.filter(card => !isChecked(card.id));
+    if (missingCards.length === 0) {
+      toast.info('No missing cards — your collection is complete!');
+      return;
+    }
+    try {
+      await exportPlaceholdersToPDF(missingCards, `${setName}_missing`);
+      toast.success(`Exported ${missingCards.length} missing card proxies to PDF!`);
+    } catch (error) {
+      console.error('Failed to export placeholders:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to export placeholders');
+    }
+  }, [cards, setName, isChecked]);
+
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-2xl">Binder View</CardTitle>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handlePrint}
-              disabled={cards.length === 0}
-              title="Print all binder pages"
-            >
-              <Printer weight="bold" className="mr-1" size={16} />
-              Print
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={cards.length === 0}
+                  className="gap-1"
+                >
+                  <Printer weight="bold" size={16} />
+                  Print / Export
+                  <CaretDown size={14} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={handlePrint}>
+                  <Printer className="mr-2" />
+                  Print Binder Pages
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleExportProxies}>
+                  <Cards className="mr-2" />
+                  Export All Proxies PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportMissingProxies}>
+                  <Cards className="mr-2" />
+                  Export Missing Cards Proxies
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button
               variant="outline"
               size="icon"
