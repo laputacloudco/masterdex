@@ -1,7 +1,7 @@
 import { openDB, type IDBPDatabase } from 'idb';
 
 const DB_NAME = 'pokomplete-cache';
-const DB_VERSION = 1;
+const DB_VERSION = 2;  // Bump to invalidate stale pre-variant-expansion data
 const STORE_NAME = 'api-cache';
 
 interface CacheEntry<T> {

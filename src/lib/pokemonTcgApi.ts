@@ -6,6 +6,9 @@ import { getDexNumber, getSpecies, searchSpecies } from './pokeApi';
 
 const API_BASE_URL = 'https://api.pokemontcg.io/v2';
 
+// Bump when mapTCGCardToCards output shape changes to invalidate cached results
+const CARD_CACHE_VERSION = 2;
+
 export interface TCGCard {
   id: string;
   name: string;
@@ -233,7 +236,7 @@ export async function fetchAllSets(): Promise<PokemonSet[]> {
 }
 
 export async function fetchCardsForSet(setId: string): Promise<PokemonCard[]> {
-  const cacheKey = `tcg:set-cards:${setId}`;
+  const cacheKey = `tcg:v${CARD_CACHE_VERSION}:set-cards:${setId}`;
   const cached = await cacheGet<PokemonCard[]>(cacheKey);
   if (cached) return cached;
 
@@ -262,7 +265,7 @@ export async function fetchCardsForPokemon(pokemonName: string, includeCameos: b
   const species = await getSpecies(dexNum);
   const displayName = species?.displayName || pokemonName;
 
-  const cacheKey = `tcg:pokemon-cards:${dexNum}`;
+  const cacheKey = `tcg:v${CARD_CACHE_VERSION}:pokemon-cards:${dexNum}`;
   let cards: PokemonCard[];
 
   const cached = await cacheGet<PokemonCard[]>(cacheKey);
