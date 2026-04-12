@@ -8,11 +8,14 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { Printer, CheckCircle, CurrencyDollar, FilePdf, CaretDown, Cards, UserCircle, ArrowsDownUp } from '@phosphor-icons/react';
+import { Printer, CheckCircle, CurrencyDollar, FilePdf, CaretDown, Cards, UserCircle, ArrowsDownUp, List, GridFour } from '@phosphor-icons/react';
 import { formatCardName, getVariantLabel } from '@/lib/cardUtils';
 import { CardPreview } from './CardPreview';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { exportChecklistToPDF, exportPlaceholdersToPDF, exportChecklistToCSV, printChecklist } from '@/lib/exportUtils';
 import { toast } from 'sonner';
+
+type ViewMode = 'list' | 'gallery';
 
 type ChecklistSortOrder = 'default' | 'price-high-low' | 'price-low-high' | 'name-a-z' | 'name-z-a';
 
@@ -68,6 +71,8 @@ export function Checklist({ cards, setName }: ChecklistProps) {
   const [checkedCards, setCheckedCards] = useKV<string[]>(`checklist-${setName}`, []);
   const [checklistSort, setChecklistSort] = useState<ChecklistSortOrder>('default');
   const [condition, setCondition] = useState<CardCondition>('near-mint');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [previewCard, setPreviewCard] = useState<PokemonCard | null>(null);
 
   const sortedCards = useMemo(
     () => sortChecklist(cards, checklistSort, (card) => getPriceForCondition(card, condition) ?? 0),
@@ -221,9 +226,17 @@ export function Checklist({ cards, setName }: ChecklistProps) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
               </DropdownMenu>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={viewMode === 'list' ? 'Switch to gallery view' : 'Switch to list view'}
+                onClick={() => setViewMode(viewMode === 'list' ? 'gallery' : 'list')}
+                className="h-9 w-9"
+              >
+                {viewMode === 'list' ? <GridFour size={20} /> : <List size={20} />}
+              </Button>
             </div>
           </div>
-        
         <div className="mt-4 space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Progress</span>
@@ -266,113 +279,198 @@ export function Checklist({ cards, setName }: ChecklistProps) {
 
       <CardContent>
         <ScrollArea className="h-[600px] pr-4">
-          <div className="space-y-2">
-            {sortedCards.map((card) => {
-              const checked = isChecked(card.id);
-              return (
-                <div
-                  key={card.id}
-                  className={`flex items-start gap-3 p-3 rounded-lg border transition-all ${
-                    checked 
-                      ? 'bg-muted/50 border-accent/50' 
-                      : 'hover:bg-accent/5 hover:border-accent/30'
-                  }`}
-                >
-                  <Checkbox
-                    id={card.id}
-                    checked={checked}
-                    onCheckedChange={() => toggleCheck(card.id)}
-                    className="mt-0.5"
-                  />
-                  
-                  {card.imageUrl && (
-                    <CardPreview card={card}>
-                      <img 
-                        src={card.imageUrl} 
-                        alt={card.name}
-                        className="w-16 h-22 object-cover rounded border cursor-pointer"
-                      />
-                    </CardPreview>
-                  )}
-                  
-                  <div className="flex-1">
-                    <label
-                      htmlFor={card.id}
-                      className={`text-sm font-medium cursor-pointer block ${
-                        checked ? 'line-through text-muted-foreground' : ''
-                      }`}
-                    >
-                      {formatCardName(card)}
-                    </label>
+          {viewMode === 'list' ? (
+            <div className="space-y-2">
+              {sortedCards.map((card) => {
+                const checked = isChecked(card.id);
+                return (
+                  <div
+                    key={card.id}
+                    className={`flex items-start gap-3 p-3 rounded-lg border transition-all ${
+                      checked 
+                        ? 'bg-muted/50 border-accent/50' 
+                        : 'hover:bg-accent/5 hover:border-accent/30'
+                    }`}
+                  >
+                    <Checkbox
+                      id={card.id}
+                      checked={checked}
+                      onCheckedChange={() => toggleCheck(card.id)}
+                      className="mt-0.5"
+                    />
                     
-                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                      <Badge variant="outline" className="text-xs">
-                        {card.setCode}
-                      </Badge>
+                    {card.imageUrl && (
+                      <CardPreview card={card}>
+                        <img 
+                          src={card.imageUrl} 
+                          alt={card.name}
+                          className="w-16 h-22 object-cover rounded border cursor-pointer"
+                        />
+                      </CardPreview>
+                    )}
+                    
+                    <div className="flex-1">
+                      <label
+                        htmlFor={card.id}
+                        className={`text-sm font-medium cursor-pointer block ${
+                          checked ? 'line-through text-muted-foreground' : ''
+                        }`}
+                      >
+                        {formatCardName(card)}
+                      </label>
                       
-                      {card.variant === 'cameo' && (
-                        <Badge 
-                          variant="secondary" 
-                          className="text-xs bg-accent/15 text-accent border-accent/30"
-                        >
-                          <UserCircle size={12} weight="fill" className="mr-1" />
-                          Cameo
+                      <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                        <Badge variant="outline" className="text-xs">
+                          {card.setCode}
                         </Badge>
-                      )}
-                      
-                      {card.variant !== 'normal' && card.variant !== 'cameo' && (
-                        <Badge 
-                          variant="secondary" 
-                          className={`text-xs ${card.isHolo ? 'holo-shimmer' : ''}`}
-                        >
-                          {getVariantLabel(card.variant)}
-                        </Badge>
-                      )}
-                      
-                      {card.isHolo && card.variant === 'normal' && (
-                        <Badge variant="secondary" className="text-xs holo-shimmer">
-                          Holo
-                        </Badge>
-                      )}
-                      
-                      <span className="text-xs text-muted-foreground">
-                        {card.rarity}
-                      </span>
-                      
-                      {(() => {
-                        const displayPrice = getPriceForCondition(card, condition);
-                        if (displayPrice == null || !Number.isFinite(displayPrice)) return null;
-                        return card.tcgPlayerUrl ? (
-                          <a
-                            href={card.tcgPlayerUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
+                        
+                        {card.variant === 'cameo' && (
+                          <Badge 
+                            variant="secondary" 
+                            className="text-xs bg-accent/15 text-accent border-accent/30"
                           >
-                            <Badge variant="outline" className="text-xs font-mono hover:bg-accent/10 cursor-pointer">
-                              ${displayPrice.toFixed(2)}
-                              <span className="ml-1 text-muted-foreground font-sans">TCGPlayer</span>
-                            </Badge>
-                          </a>
-                        ) : (
-                          <Badge variant="outline" className="text-xs font-mono">
-                            ${displayPrice.toFixed(2)}
+                            <UserCircle size={12} weight="fill" className="mr-1" />
+                            Cameo
                           </Badge>
-                        );
-                      })()}
+                        )}
+                        
+                        {card.variant !== 'normal' && card.variant !== 'cameo' && (
+                          <Badge 
+                            variant="secondary" 
+                            className={`text-xs ${card.isHolo ? 'holo-shimmer' : ''}`}
+                          >
+                            {getVariantLabel(card.variant)}
+                          </Badge>
+                        )}
+                        
+                        {card.isHolo && card.variant === 'normal' && (
+                          <Badge variant="secondary" className="text-xs holo-shimmer">
+                            Holo
+                          </Badge>
+                        )}
+                        
+                        <span className="text-xs text-muted-foreground">
+                          {card.rarity}
+                        </span>
+                        
+                        {(() => {
+                          const displayPrice = getPriceForCondition(card, condition);
+                          if (displayPrice == null || !Number.isFinite(displayPrice)) return null;
+                          return card.tcgPlayerUrl ? (
+                            <a
+                              href={card.tcgPlayerUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Badge variant="outline" className="text-xs font-mono hover:bg-accent/10 cursor-pointer">
+                                ${displayPrice.toFixed(2)}
+                                <span className="ml-1 text-muted-foreground font-sans">TCGPlayer</span>
+                              </Badge>
+                            </a>
+                          ) : (
+                            <Badge variant="outline" className="text-xs font-mono">
+                              ${displayPrice.toFixed(2)}
+                            </Badge>
+                          );
+                        })()}
+                      </div>
                     </div>
-                  </div>
 
-                  {checked && (
-                    <CheckCircle weight="fill" className="text-accent flex-shrink-0" size={20} />
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                    {checked && (
+                      <CheckCircle weight="fill" className="text-accent flex-shrink-0" size={20} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {sortedCards.map((card) => {
+                const checked = isChecked(card.id);
+                return (
+                  <div
+                    key={card.id}
+                    className={`group relative rounded-lg border overflow-hidden transition-all cursor-pointer ${
+                      checked
+                        ? 'border-accent/50 ring-1 ring-accent/30'
+                        : 'opacity-75 hover:opacity-100 hover:border-accent/30'
+                    }`}
+                  >
+                    {card.imageUrl ? (
+                      <img
+                        src={card.imageUrl}
+                        alt={card.name}
+                        loading="lazy"
+                        className="w-full h-auto object-cover"
+                        onClick={() => setPreviewCard(card)}
+                      />
+                    ) : (
+                      <div
+                        className="w-full aspect-[2.5/3.5] bg-muted flex items-center justify-center text-xs text-muted-foreground"
+                        onClick={() => setPreviewCard(card)}
+                      >
+                        No image
+                      </div>
+                    )}
+
+                    {/* Hover overlay with card info */}
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2 pointer-events-none">
+                      <p className="text-white text-xs font-medium truncate">{formatCardName(card)}</p>
+                      <p className="text-white/70 text-[10px] truncate">
+                        {card.setCode} {card.variant !== 'normal' ? `\u2022 ${getVariantLabel(card.variant)}` : ''}
+                      </p>
+                    </div>
+
+                    {/* Checkbox overlay */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleCheck(card.id);
+                      }}
+                      className="absolute top-1.5 left-1.5 z-10 rounded-full bg-background/80 backdrop-blur-sm p-0.5 transition-transform hover:scale-110"
+                      aria-label={checked ? 'Mark as uncollected' : 'Mark as collected'}
+                    >
+                      {checked ? (
+                        <CheckCircle weight="fill" className="text-accent" size={22} />
+                      ) : (
+                        <div className="w-[22px] h-[22px] rounded-full border-2 border-muted-foreground/50" />
+                      )}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </ScrollArea>
       </CardContent>
     </Card>
+
+    {/* Large image preview dialog */}
+    <Dialog open={previewCard !== null} onOpenChange={(open) => { if (!open) setPreviewCard(null); }}>
+      <DialogContent className="max-w-sm p-2 sm:max-w-md">
+        <DialogTitle className="sr-only">{previewCard ? formatCardName(previewCard) : 'Card Preview'}</DialogTitle>
+        {previewCard && (
+          <div className="flex flex-col items-center gap-2">
+            {previewCard.largeImageUrl || previewCard.imageUrl ? (
+              <img
+                src={previewCard.largeImageUrl || previewCard.imageUrl}
+                alt={previewCard.name}
+                className="w-full h-auto rounded"
+              />
+            ) : (
+              <div className="w-full aspect-[2.5/3.5] bg-muted flex items-center justify-center text-muted-foreground rounded">
+                No image available
+              </div>
+            )}
+            <p className="text-sm font-medium text-center">{formatCardName(previewCard)}</p>
+            <p className="text-xs text-muted-foreground text-center">
+              {previewCard.setCode} \u2022 {previewCard.variant !== 'normal' ? getVariantLabel(previewCard.variant) : previewCard.rarity}
+            </p>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
 
     <div id="checklist-print-content" style={{ display: 'none' }}>
       <h1>{setName}</h1>
