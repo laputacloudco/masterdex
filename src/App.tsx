@@ -10,6 +10,7 @@ import { BinderCalculator } from '@/components/BinderCalculator';
 import { BinderView } from '@/components/BinderView';
 import { CameoBrowser } from '@/components/CameoBrowser';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { Footer } from '@/components/Footer';
 import { fetchCardsForSet, fetchCardsForPokemon, deduplicateCards } from '@/lib/pokemonTcgApi';
 import { sortCards, sortByEvolutionChainAsync, sortGroupedByPokemonAsync } from '@/lib/cardUtils';
 import { buildShareUrl, parseShareUrl } from '@/lib/shareUrl';
@@ -317,6 +318,7 @@ function App() {
           </TabsContent>
         </Tabs>
       </div>
+      <Footer />
     </div>
   );
 }
