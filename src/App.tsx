@@ -9,6 +9,7 @@ import { BinderCalculator } from '@/components/BinderCalculator';
 import { BinderView } from '@/components/BinderView';
 import { CameoBrowser } from '@/components/CameoBrowser';
 import { ComparisonView } from '@/components/ComparisonView';
+import { ShowView } from '@/components/ShowView';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Footer } from '@/components/Footer';
 import { ShareNetwork, ClipboardText } from '@phosphor-icons/react';
@@ -65,12 +66,13 @@ function App() {
         </header>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-5 mb-2 h-auto">
+          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-6 mb-2 h-auto">
             <TabsTrigger value="builder" className="min-h-[44px] text-xs sm:text-sm px-1 sm:px-3">Build Set</TabsTrigger>
             <TabsTrigger value="checklist" disabled={!canViewChecklist} className="min-h-[44px] text-xs sm:text-sm px-1 sm:px-3">
               Checklist {canViewChecklist && `(${cards.length})`}
             </TabsTrigger>
             <TabsTrigger value="binder" disabled={!canViewChecklist} className="min-h-[44px] text-xs sm:text-sm px-1 sm:px-3">Binder</TabsTrigger>
+            <TabsTrigger value="show" disabled={!canViewChecklist} className="min-h-[44px] text-xs sm:text-sm px-1 sm:px-3">Show</TabsTrigger>
             <TabsTrigger value="compare" className="min-h-[44px] text-xs sm:text-sm px-1 sm:px-3">Compare</TabsTrigger>
             <TabsTrigger value="cameos" className="min-h-[44px] text-xs sm:text-sm px-1 sm:px-3">Cameos</TabsTrigger>
           </TabsList>
@@ -133,6 +135,12 @@ function App() {
                 <BinderCalculator cardCount={cards.length} cardsPerPage={binderCardsPerPage} onCardsPerPageChange={setBinderCardsPerPage} />
                 <BinderView cards={cards} setName={checklistName} storageKey={checklistKey} cardsPerPage={binderCardsPerPage} />
               </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="show" className="mt-4 sm:mt-8">
+            {canViewChecklist && (
+              <ShowView cards={cards} setName={checklistName} storageKey={checklistKey} />
             )}
           </TabsContent>
 
