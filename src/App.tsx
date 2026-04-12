@@ -37,6 +37,7 @@ function App() {
   const [sortOrder, setSortOrder] = useKV<SortOrder>('config-sort', 'chronological');
   const [selectedPokemon, setSelectedPokemon] = useKV<string[]>('config-pokemon', []);
   const [selectedSets, setSelectedSets] = useKV<string[]>('config-sets', []);
+  const [uniqueArtOnly, setUniqueArtOnly] = useKV<boolean>('config-unique-art', false);
   
   const [cards, setCards] = useState<PokemonCard[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -55,6 +56,7 @@ function App() {
       setSortOrder(config.sortOrder);
       setSelectedPokemon(config.selectedPokemon);
       setSelectedSets(config.selectedSets);
+      if (config.uniqueArtOnly !== undefined) setUniqueArtOnly(config.uniqueArtOnly);
       // Clean URL without triggering navigation
       window.history.replaceState({}, '', window.location.pathname);
     }
@@ -82,6 +84,7 @@ function App() {
       selectedSets: currentSets,
       variantFilters: currentVariants,
       sortOrder: currentSort,
+      uniqueArtOnly: uniqueArtOnly ?? false,
     });
 
     navigator.clipboard.writeText(url).then(() => {
@@ -89,7 +92,7 @@ function App() {
     }).catch(() => {
       toast.error('Failed to copy link.');
     });
-  }, [masterSetType, selectedPokemon, selectedSets, variantFilters, sortOrder]);
+  }, [masterSetType, selectedPokemon, selectedSets, variantFilters, sortOrder, uniqueArtOnly]);
 
   useEffect(() => {
     const fetchCards = async () => {
@@ -152,14 +155,30 @@ function App() {
           }
         });
 
+        // When "unique art only" is enabled, collapse cards with the same
+        // base card ID (setCode + number) into one entry per unique artwork.
+        // This gives "one of each card number" without variant duplication.
+        let cardsToSort = filteredCards;
+        if (uniqueArtOnly) {
+          const seen = new Map<string, PokemonCard>();
+          for (const card of filteredCards) {
+            // Key by the base card ID (strip variant suffix like "-reverseHolofoil")
+            const baseId = card.id.replace(/-(?:normal|reverseHolofoil|holofoil|1stEditionHolofoil|1stEditionNormal|unlimitedHolofoil)$/, '');
+            if (!seen.has(baseId)) {
+              seen.set(baseId, card);
+            }
+          }
+          cardsToSort = Array.from(seen.values());
+        }
+
         let sorted: PokemonCard[];
         const currentSort = sortOrder || 'chronological';
         if (currentSort === 'evolution-chain') {
-          sorted = await sortByEvolutionChainAsync(filteredCards, selectedPokemon || []);
+          sorted = await sortByEvolutionChainAsync(cardsToSort, selectedPokemon || []);
         } else if (currentSort === 'grouped-by-pokemon') {
-          sorted = await sortGroupedByPokemonAsync(filteredCards, selectedPokemon || []);
+          sorted = await sortGroupedByPokemonAsync(cardsToSort, selectedPokemon || []);
         } else {
-          sorted = sortCards(filteredCards, currentSort);
+          sorted = sortCards(cardsToSort, currentSort);
         }
         setCards(sorted);
       } catch (error) {
@@ -172,7 +191,7 @@ function App() {
     };
 
     fetchCards();
-  }, [masterSetType, variantFilters, sortOrder, selectedPokemon, selectedSets]);
+  }, [masterSetType, variantFilters, sortOrder, selectedPokemon, selectedSets, uniqueArtOnly]);
 
   const handleLoadSetlist = (setlist: SavedSetlist) => {
     setMasterSetType(setlist.type);
@@ -263,6 +282,8 @@ function App() {
                   setSelectedPokemon={setSelectedPokemon}
                   selectedSets={selectedSets}
                   setSelectedSets={setSelectedSets}
+                  uniqueArtOnly={uniqueArtOnly}
+                  setUniqueArtOnly={setUniqueArtOnly}
                   isLoading={isLoading}
                   cardCount={cards.length}
                   onViewChecklist={() => setActiveTab('checklist')}

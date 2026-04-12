@@ -12,6 +12,7 @@ import type { MasterSetType, SortOrder, VariantFilters } from './types';
  *                                (omitted = all enabled)
  *   sort=chronological|set-order|grouped-by-set|grouped-by-pokemon|evolution-chain
  *                                (omitted = chronological)
+ *   unique=1                      Show one entry per card number (omitted = all variants)
  *
  * Forward-compatibility rules:
  *   - Unknown query params are ignored (future params won't break old clients)
@@ -53,6 +54,7 @@ export interface ShareableConfig {
   selectedSets: string[];
   variantFilters: VariantFilters;
   sortOrder: SortOrder;
+  uniqueArtOnly?: boolean;
 }
 
 export function buildShareUrl(config: ShareableConfig): string {
@@ -79,6 +81,11 @@ export function buildShareUrl(config: ShareableConfig): string {
 
   if (config.sortOrder !== 'chronological') {
     params.set('sort', config.sortOrder);
+  }
+
+  // Only include when true (default is false / all variants)
+  if (config.uniqueArtOnly) {
+    params.set('unique', '1');
   }
 
   return `${window.location.origin}${window.location.pathname}?${params.toString()}`;
@@ -132,5 +139,7 @@ export function parseShareUrl(search: string): ShareableConfig | null {
     ? (sortParam as SortOrder)
     : 'chronological';
 
-  return { masterSetType, selectedPokemon, selectedSets, variantFilters, sortOrder };
+  const uniqueArtOnly = params.get('unique') === '1';
+
+  return { masterSetType, selectedPokemon, selectedSets, variantFilters, sortOrder, uniqueArtOnly };
 }

@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,8 @@ interface SetBuilderProps {
   setSelectedSets: (value: string[]) => void;
   includeEvolutionChain?: boolean | undefined;
   setIncludeEvolutionChain?: (value: boolean) => void;
+  uniqueArtOnly?: boolean | undefined;
+  setUniqueArtOnly?: (value: boolean) => void;
   isLoading: boolean;
   cardCount: number;
   onViewChecklist?: () => void;
@@ -53,6 +56,8 @@ export function SetBuilder({
   setSelectedPokemon,
   selectedSets,
   setSelectedSets,
+  uniqueArtOnly,
+  setUniqueArtOnly,
   isLoading,
   cardCount,
   onViewChecklist,
@@ -166,6 +171,24 @@ export function SetBuilder({
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
+            <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+              <Switch
+                id="unique-art-toggle"
+                checked={!(uniqueArtOnly ?? false)}
+                onCheckedChange={(checked) => setUniqueArtOnly?.(!checked)}
+              />
+              <div className="flex-1">
+                <Label htmlFor="unique-art-toggle" className="cursor-pointer font-medium">
+                  {uniqueArtOnly ? 'Unique Art Only' : 'All Variants'}
+                </Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {uniqueArtOnly
+                    ? 'One entry per card number — no reverse holo / holo duplicates'
+                    : 'Separate entries for each printing variant (reverse holo, 1st edition, etc.)'}
+                </p>
+              </div>
+            </div>
+
             <div className="flex flex-wrap gap-2">
               <Button
                 variant="outline"
