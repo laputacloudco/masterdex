@@ -2,7 +2,7 @@ export type CardVariant = 'normal' | 'reverse-holo' | 'holo' | 'full-art' | 'sec
 
 export type SortOrder = 'set-order' | 'chronological' | 'grouped-by-set' | 'grouped-by-pokemon' | 'evolution-chain';
 
-export type MasterSetType = 'official-set' | 'pokemon-collection';
+export type MasterSetType = 'official-set' | 'pokemon-collection' | 'type-collection' | 'artist-collection';
 
 export interface VariantFilters {
   normal: boolean;
@@ -46,6 +46,7 @@ export interface PokemonCard {
   supertype?: string;
   subtypes?: string[];
   nationalDexNumber?: number;
+  types?: string[];
 }
 
 export interface PokemonSet {
@@ -72,6 +73,8 @@ export interface SavedSetlist {
   variantFilters: VariantFilters;
   selectedSets: string[];
   selectedPokemon: string[];
+  selectedTypes?: string[];
+  selectedArtists?: string[];
   sortOrder: SortOrder;
   cardCount: number;
   createdAt: string;

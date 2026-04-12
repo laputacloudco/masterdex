@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
   import { CircleNotch, Sparkle, Star, Lightning, Trophy, Gift, Handshake, UserCircle } from '@phosphor-icons/react';
 import { PokemonSelector } from './PokemonSelector';
 import { SetSelector } from './SetSelector';
+import { TypeSelector } from './TypeSelector';
+import { ArtistSelector } from './ArtistSelector';
 
 interface SetBuilderProps {
   masterSetType: MasterSetType | undefined;
@@ -22,6 +24,10 @@ interface SetBuilderProps {
   setSelectedPokemon: (value: string[]) => void;
   selectedSets: string[] | undefined;
   setSelectedSets: (value: string[]) => void;
+  selectedTypes?: string[] | undefined;
+  setSelectedTypes?: (value: string[]) => void;
+  selectedArtists?: string[] | undefined;
+  setSelectedArtists?: (value: string[]) => void;
   includeEvolutionChain?: boolean | undefined;
   setIncludeEvolutionChain?: (value: boolean) => void;
   uniqueArtOnly?: boolean | undefined;
@@ -57,6 +63,10 @@ export function SetBuilder({
   setSelectedPokemon,
   selectedSets,
   setSelectedSets,
+  selectedTypes,
+  setSelectedTypes,
+  selectedArtists,
+  setSelectedArtists,
   uniqueArtOnly,
   setUniqueArtOnly,
   isLoading,
@@ -69,6 +79,8 @@ export function SetBuilder({
   const currentSortOrder = sortOrder || 'chronological';
   const currentSelectedPokemon = selectedPokemon || [];
   const currentSelectedSets = selectedSets || [];
+  const currentSelectedTypes = selectedTypes || [];
+  const currentSelectedArtists = selectedArtists || [];
 
   const handleVariantToggle = (variant: keyof VariantFilters) => {
     setVariantFilters({
@@ -160,6 +172,18 @@ export function SetBuilder({
               <RadioGroupItem value="pokemon-collection" id="pokemon-collection" />
               <Label htmlFor="pokemon-collection" className="cursor-pointer text-sm sm:text-base">
                 Pokemon Collection — All cards featuring specific Pokemon
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2 min-h-[44px]">
+              <RadioGroupItem value="type-collection" id="type-collection" />
+              <Label htmlFor="type-collection" className="cursor-pointer text-sm sm:text-base">
+                Type Collection — All cards of a specific Pokemon type
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2 min-h-[44px]">
+              <RadioGroupItem value="artist-collection" id="artist-collection" />
+              <Label htmlFor="artist-collection" className="cursor-pointer text-sm sm:text-base">
+                Artist Collection — All cards by a specific artist
               </Label>
             </div>
           </RadioGroup>
@@ -464,7 +488,7 @@ export function SetBuilder({
         </CardContent>
       </Card>
 
-      {currentMasterSetType === 'official-set' ? (
+      {currentMasterSetType === 'official-set' && (
         <SetSelector 
           selectedSets={currentSelectedSets}
           onSelectSet={(setCode) => {
@@ -476,7 +500,8 @@ export function SetBuilder({
             setSelectedSets(currentSelectedSets.filter(s => s !== setCode));
           }}
         />
-      ) : (
+      )}
+      {currentMasterSetType === 'pokemon-collection' && (
         <PokemonSelector
           selectedPokemon={currentSelectedPokemon}
           onSelectPokemon={(pokemon) => {
@@ -490,6 +515,32 @@ export function SetBuilder({
           }}
           onRemovePokemon={(pokemon) => {
             setSelectedPokemon(currentSelectedPokemon.filter(p => p !== pokemon));
+          }}
+        />
+      )}
+      {currentMasterSetType === 'type-collection' && setSelectedTypes && (
+        <TypeSelector
+          selectedTypes={currentSelectedTypes}
+          onSelectType={(type) => {
+            if (!currentSelectedTypes.includes(type)) {
+              setSelectedTypes([...currentSelectedTypes, type]);
+            }
+          }}
+          onRemoveType={(type) => {
+            setSelectedTypes(currentSelectedTypes.filter(t => t !== type));
+          }}
+        />
+      )}
+      {currentMasterSetType === 'artist-collection' && setSelectedArtists && (
+        <ArtistSelector
+          selectedArtists={currentSelectedArtists}
+          onSelectArtist={(artist) => {
+            if (!currentSelectedArtists.includes(artist)) {
+              setSelectedArtists([...currentSelectedArtists, artist]);
+            }
+          }}
+          onRemoveArtist={(artist) => {
+            setSelectedArtists(currentSelectedArtists.filter(a => a !== artist));
           }}
         />
       )}
