@@ -8,6 +8,7 @@ import { VariantStatistics } from '@/components/VariantStatistics';
 import { BinderCalculator } from '@/components/BinderCalculator';
 import { BinderView } from '@/components/BinderView';
 import { CameoBrowser } from '@/components/CameoBrowser';
+import { ComparisonView } from '@/components/ComparisonView';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Footer } from '@/components/Footer';
 import { ShareNetwork } from '@phosphor-icons/react';
@@ -64,12 +65,13 @@ function App() {
         </header>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-4 mb-2 h-auto">
+          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-5 mb-2 h-auto">
             <TabsTrigger value="builder" className="min-h-[44px] text-xs sm:text-sm px-1 sm:px-3">Build Set</TabsTrigger>
             <TabsTrigger value="checklist" disabled={!canViewChecklist} className="min-h-[44px] text-xs sm:text-sm px-1 sm:px-3">
               Checklist {canViewChecklist && `(${cards.length})`}
             </TabsTrigger>
             <TabsTrigger value="binder" disabled={!canViewChecklist} className="min-h-[44px] text-xs sm:text-sm px-1 sm:px-3">Binder</TabsTrigger>
+            <TabsTrigger value="compare" className="min-h-[44px] text-xs sm:text-sm px-1 sm:px-3">Compare</TabsTrigger>
             <TabsTrigger value="cameos" className="min-h-[44px] text-xs sm:text-sm px-1 sm:px-3">Cameos</TabsTrigger>
           </TabsList>
 
@@ -137,6 +139,12 @@ function App() {
           <TabsContent value="cameos" className="mt-4 sm:mt-8">
             <div className="max-w-5xl mx-auto">
               <CameoBrowser />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="compare" className="mt-4 sm:mt-8">
+            <div className="max-w-7xl mx-auto">
+              <ComparisonView />
             </div>
           </TabsContent>
         </Tabs>
