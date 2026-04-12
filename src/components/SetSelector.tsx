@@ -57,7 +57,7 @@ export function SetSelector({ selectedSets, onSelectSet, onRemoveSet }: SetSelec
                     key={set.code}
                     onClick={() => !isSelected && onSelectSet(set.code)}
                     disabled={isSelected}
-                    className={`w-full text-left px-3 py-2 rounded transition-colors ${
+                    className={`w-full text-left px-3 py-2 rounded transition-colors min-h-[44px] ${
                       isSelected 
                         ? 'bg-muted text-muted-foreground cursor-not-allowed' 
                         : 'hover:bg-accent'
@@ -88,11 +88,11 @@ export function SetSelector({ selectedSets, onSelectSet, onRemoveSet }: SetSelec
               {selectedSets.map(setCode => {
                 const set = sets.find(s => s.code === setCode);
                 return (
-                  <Badge key={setCode} variant="secondary" className="gap-2">
+                  <Badge key={setCode} variant="secondary" className="gap-2 min-h-[44px] flex items-center">
                     {set?.name || setCode}
                     <button
                       onClick={() => onRemoveSet(setCode)}
-                      className="hover:text-destructive transition-colors"
+                      className="hover:text-destructive transition-colors p-1"
                     >
                       <X size={14} />
                     </button>

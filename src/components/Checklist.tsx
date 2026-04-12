@@ -8,11 +8,14 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { Printer, CheckCircle, CurrencyDollar, FilePdf, CaretDown, Cards, UserCircle, ArrowsDownUp } from '@phosphor-icons/react';
+import { Printer, CheckCircle, CurrencyDollar, FilePdf, CaretDown, Cards, UserCircle, ArrowsDownUp, List, GridFour } from '@phosphor-icons/react';
 import { formatCardName, getVariantLabel } from '@/lib/cardUtils';
 import { CardPreview } from './CardPreview';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { exportChecklistToPDF, exportPlaceholdersToPDF, printChecklist } from '@/lib/exportUtils';
 import { toast } from 'sonner';
+
+type ViewMode = 'list' | 'gallery';
 
 type ChecklistSortOrder = 'default' | 'price-high-low' | 'price-low-high' | 'name-a-z' | 'name-z-a';
 
@@ -68,6 +71,8 @@ export function Checklist({ cards, setName }: ChecklistProps) {
   const [checkedCards, setCheckedCards] = useKV<string[]>(`checklist-${setName}`, []);
   const [checklistSort, setChecklistSort] = useState<ChecklistSortOrder>('default');
   const [condition, setCondition] = useState<CardCondition>('near-mint');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [previewCard, setPreviewCard] = useState<PokemonCard | null>(null);
 
   const sortedCards = useMemo(
     () => sortChecklist(cards, checklistSort, (card) => getPriceForCondition(card, condition) ?? 0),
@@ -151,12 +156,12 @@ export function Checklist({ cards, setName }: ChecklistProps) {
                 {setName} • {totalCount} cards
               </CardDescription>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2">
               <Select value={condition} onValueChange={(v) => setCondition(v as CardCondition)}>
-                <SelectTrigger aria-label="Card condition" className="h-9 gap-1" size="default">
+                <SelectTrigger aria-label="Card condition" className="min-h-[44px] gap-1 w-full sm:w-auto" size="default">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent align="end">
+                <SelectContent align="end" className="max-w-[calc(100vw-2rem)]">
                   {(Object.keys(CONDITION_LABELS) as CardCondition[]).map((key) => (
                     <SelectItem key={key} value={key}>
                       {CONDITION_LABELS[key]}
@@ -166,18 +171,18 @@ export function Checklist({ cards, setName }: ChecklistProps) {
               </Select>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="gap-2">
+                  <Button variant="outline" className="gap-2 min-h-[44px] w-full sm:w-auto justify-center">
                     <ArrowsDownUp />
                     {checklistSort === 'default' ? 'Sort' : SORT_LABELS[checklistSort]}
                     <CaretDown />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuContent align="end" className="w-52 max-w-[calc(100vw-2rem)]">
                   {(Object.keys(SORT_LABELS) as ChecklistSortOrder[]).map((key) => (
                     <DropdownMenuItem
                       key={key}
                       onClick={() => setChecklistSort(key)}
-                      className={checklistSort === key ? 'font-semibold bg-accent/10' : ''}
+                      className={`min-h-[44px] ${checklistSort === key ? 'font-semibold bg-accent/10' : ''}`}
                     >
                       {SORT_LABELS[key]}
                     </DropdownMenuItem>
@@ -186,32 +191,41 @@ export function Checklist({ cards, setName }: ChecklistProps) {
               </DropdownMenu>
               <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2">
+                <Button variant="outline" className="gap-2 min-h-[44px] w-full sm:w-auto justify-center">
                   <Printer />
                   Export
                   <CaretDown />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={handlePrint}>
+              <DropdownMenuContent align="end" className="w-56 max-w-[calc(100vw-2rem)]">
+                <DropdownMenuItem onClick={handlePrint} className="min-h-[44px]">
                   <Printer className="mr-2" />
                   Print Checklist
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleExportPDF}>
+                <DropdownMenuItem onClick={handleExportPDF} className="min-h-[44px]">
                   <FilePdf className="mr-2" />
                   Export Checklist PDF
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleExportProxies}>
+                <DropdownMenuItem onClick={handleExportProxies} className="min-h-[44px]">
                   <Cards className="mr-2" />
                   Export All Proxies PDF
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleExportMissingProxies}>
+                <DropdownMenuItem onClick={handleExportMissingProxies} className="min-h-[44px]">
                   <Cards className="mr-2" />
                   Export Missing Cards Proxies
                 </DropdownMenuItem>
               </DropdownMenuContent>
               </DropdownMenu>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={viewMode === 'list' ? 'Switch to gallery view' : 'Switch to list view'}
+                onClick={() => setViewMode(viewMode === 'list' ? 'gallery' : 'list')}
+                className="h-9 w-9"
+              >
+                {viewMode === 'list' ? <GridFour size={20} /> : <List size={20} />}
+              </Button>
             </div>
           </div>
         
@@ -263,7 +277,7 @@ export function Checklist({ cards, setName }: ChecklistProps) {
               return (
                 <div
                   key={card.id}
-                  className={`flex items-start gap-3 p-3 rounded-lg border transition-all ${
+                  className={`flex items-start gap-2 sm:gap-3 p-3 rounded-lg border transition-all min-h-[44px] ${
                     checked 
                       ? 'bg-muted/50 border-accent/50' 
                       : 'hover:bg-accent/5 hover:border-accent/30'
@@ -273,7 +287,7 @@ export function Checklist({ cards, setName }: ChecklistProps) {
                     id={card.id}
                     checked={checked}
                     onCheckedChange={() => toggleCheck(card.id)}
-                    className="mt-0.5"
+                    className="mt-0.5 h-5 w-5 min-h-[20px] min-w-[20px]"
                   />
                   
                   {card.imageUrl && (
