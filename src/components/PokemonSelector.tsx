@@ -91,27 +91,27 @@ export function PokemonSelector({
             placeholder="Search Pokemon..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 min-h-[44px]"
           />
         </div>
 
         {searchTerm && searchResults.length > 0 && (
           <div className="border rounded-lg p-2 max-h-64 overflow-y-auto space-y-1">
             {searchResults.map(({ name, chain }) => (
-              <div key={name} className="flex items-center gap-2 px-3 py-2 rounded hover:bg-muted/50 transition-colors">
+              <div key={name} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 px-3 py-2 rounded hover:bg-muted/50 transition-colors">
                 <button
                   onClick={() => handleSelectSingle(name)}
-                  className="font-medium hover:text-primary transition-colors"
+                  className="font-medium hover:text-primary transition-colors min-h-[44px] text-left"
                 >
                   {name}
                 </button>
                 {chain.length > 1 && (
                   <button
                     onClick={() => handleSelectChain(chain)}
-                    className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors border rounded-full px-2.5 py-1 hover:border-primary/50"
+                    className="sm:ml-auto flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors border rounded-full px-2.5 py-1 hover:border-primary/50 min-h-[44px]"
                   >
                     <ArrowRight size={12} weight="bold" />
-                    {chain.join(' → ')}
+                    <span className="break-all">{chain.join(' → ')}</span>
                   </button>
                 )}
               </div>
@@ -128,11 +128,11 @@ export function PokemonSelector({
             <p className="text-sm font-medium mb-2">Selected Pokemon ({selectedPokemon.length})</p>
             <div className="flex flex-wrap gap-2">
               {selectedPokemon.map(pokemon => (
-                <Badge key={pokemon} variant="secondary" className="gap-2">
+                <Badge key={pokemon} variant="secondary" className="gap-2 min-h-[44px] flex items-center">
                   {pokemon}
                   <button
                     onClick={() => onRemovePokemon(pokemon)}
-                    className="hover:text-destructive transition-colors"
+                    className="hover:text-destructive transition-colors p-1"
                   >
                     <X size={14} />
                   </button>
