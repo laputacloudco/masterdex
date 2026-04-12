@@ -56,22 +56,26 @@
 
 ## Roadmap
 
-### Phase 1: Foundation -- COMPLETE
+### Phase 1: Foundation — COMPLETE
 All shipped. See What Has Shipped above.
 
-### Phase 2: Differentiation (current)
-- Complete my collection buy list -- given checked cards, show uncollected with TCGPlayer links plus total cost by condition
-- Multi-Pokemon comparison -- side-by-side card history for two Pokemon
-- Evolution chain visualization -- visual tree with card counts per stage per set
-- Printable binder pages -- print 9-pocket placeholder pages with card images in positions
-- Cameo contribution workflow -- form to submit discoveries, export for community review
+### Phase 2: Differentiation
+- What do I still need buy list with TCGPlayer links + cost estimate
+- Printable binder pages (integrated with binder view and binder calculator, supports configurable pocket layouts)
+- Type-themed collections (every Dragon-type card)
 
 ### Phase 3: Growth
-- Artist master sets -- every card by Mitsuhiro Arita (uses TCG API artist field)
-- Type-themed collections -- every Dragon-type card (uses supertype/subtype)
-- Japanese set support
-- Shareable collection profiles -- public URLs
+- Artist master sets (every card by Mitsuhiro Arita)
+- Multi-Pokemon comparison (side-by-side card histories)
+
+### Phase 4: Scale
+- Evolution chain visualization tree
+- Cameo contribution workflow
+- Shareable collection profiles (public URLs)
 - Price history charts
+
+### Phase 5: Expansion
+- Japanese set support
 - Community leaderboard (opt-in)
 
 ## Monetization
