@@ -214,7 +214,7 @@ export function ShowView({ cards, setName, storageKey, onClose }: ShowViewProps)
                   variant="ghost"
                   size="icon"
                   onClick={onClose}
-                  className="shrink-0 -ml-1 h-9 w-9"
+                  className="shrink-0 -ml-1 min-h-[44px] min-w-[44px] p-0"
                   aria-label="Exit show mode"
                 >
                   <X size={20} weight="bold" />
