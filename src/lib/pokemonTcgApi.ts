@@ -92,51 +92,102 @@ function isHoloCard(card: TCGCard): boolean {
 }
 
 /**
- * Map a TCG API card to our app's PokemonCard type.
- * Uses nationalPokedexNumbers to determine the Pokemon name via PokeAPI
- * instead of unreliable name.split(' ')[0] parsing.
+ * Map a TCG API card's price type key to our CardVariant type.
  */
-export async function mapTCGCardToCard(tcgCard: TCGCard, pokemonDisplayName?: string): Promise<PokemonCard> {
-  // Determine Pokemon name from dex number or fallback
+function priceTypeToVariant(priceType: string): CardVariant {
+  switch (priceType) {
+    case 'reverseHolofoil': return 'reverse-holo';
+    case 'holofoil': return 'holo';
+    case '1stEditionHolofoil': return 'holo';
+    case '1stEditionNormal': return 'normal';
+    case 'unlimitedHolofoil': return 'holo';
+    case 'normal': return 'normal';
+    default: return 'normal';
+  }
+}
+
+function priceTypeLabel(priceType: string): string {
+  switch (priceType) {
+    case 'reverseHolofoil': return 'Reverse Holo';
+    case 'holofoil': return 'Holo';
+    case '1stEditionHolofoil': return '1st Edition Holo';
+    case '1stEditionNormal': return '1st Edition';
+    case 'unlimitedHolofoil': return 'Unlimited Holo';
+    case 'normal': return 'Normal';
+    default: return priceType;
+  }
+}
+
+/**
+ * Map a TCG API card to one or more PokemonCard entries.
+ * Expands cards with multiple TCGPlayer price types (e.g., normal + reverseHolofoil)
+ * into separate checklist entries so collectors can track each variant independently.
+ */
+export async function mapTCGCardToCards(tcgCard: TCGCard, pokemonDisplayName?: string): Promise<PokemonCard[]> {
   let resolvedName = pokemonDisplayName || tcgCard.name;
   if (!pokemonDisplayName && tcgCard.nationalPokedexNumbers?.length) {
     const species = await getSpecies(tcgCard.nationalPokedexNumbers[0]);
     if (species) resolvedName = species.displayName;
   }
 
-  let marketPrice: number | undefined;
-  let prices: { low?: number; mid?: number; market?: number; high?: number } | undefined;
-  if (tcgCard.tcgplayer?.prices) {
-    const priceTypes = Object.values(tcgCard.tcgplayer.prices);
-    if (priceTypes.length > 0) {
-      const firstPriceType = priceTypes[0];
-      prices = {
-        low: firstPriceType.low,
-        mid: firstPriceType.mid,
-        market: firstPriceType.market,
-        high: firstPriceType.high,
-      };
-      marketPrice = firstPriceType.market ?? firstPriceType.mid;
-    }
+  const tcgPriceTypes = tcgCard.tcgplayer?.prices
+    ? Object.entries(tcgCard.tcgplayer.prices)
+    : [];
+
+  // If no price data or only one variant, return a single card
+  if (tcgPriceTypes.length <= 1) {
+    const priceData = tcgPriceTypes[0]?.[1];
+    return [{
+      id: tcgCard.id,
+      name: tcgCard.name,
+      pokemonName: resolvedName,
+      setName: tcgCard.set.name,
+      setCode: tcgCard.set.id,
+      setNumber: `${tcgCard.number}/${tcgCard.set.printedTotal || tcgCard.set.total}`,
+      releaseDate: tcgCard.set.releaseDate,
+      variant: mapVariant(tcgCard),
+      rarity: tcgCard.rarity || 'Common',
+      isHolo: isHoloCard(tcgCard),
+      imageUrl: tcgCard.images.small,
+      largeImageUrl: tcgCard.images.large,
+      marketPrice: priceData?.market ?? priceData?.mid,
+      prices: priceData ? { low: priceData.low, mid: priceData.mid, market: priceData.market, high: priceData.high } : undefined,
+      tcgPlayerUrl: tcgCard.tcgplayer?.url,
+    }];
   }
-  
-  return {
-    id: tcgCard.id,
-    name: tcgCard.name,
-    pokemonName: resolvedName,
-    setName: tcgCard.set.name,
-    setCode: tcgCard.set.id,
-    setNumber: `${tcgCard.number}/${tcgCard.set.printedTotal || tcgCard.set.total}`,
-    releaseDate: tcgCard.set.releaseDate,
-    variant: mapVariant(tcgCard),
-    rarity: tcgCard.rarity || 'Common',
-    isHolo: isHoloCard(tcgCard),
-    imageUrl: tcgCard.images.small,
-    largeImageUrl: tcgCard.images.large,
-    marketPrice,
-    prices,
-    tcgPlayerUrl: tcgCard.tcgplayer?.url,
-  };
+
+  // Expand into one entry per price type variant.
+  // Preserve the semantic variant from mapVariant() (promo, collab, etc.)
+  // and layer on the physical variant (holo/reverse-holo) as artVariant.
+  const baseVariant = mapVariant(tcgCard);
+
+  return tcgPriceTypes.map(([priceType, priceData]) => {
+    const physicalVariant = priceTypeToVariant(priceType);
+    // Use the semantic variant (promo, collab, etc.) if it's more specific than normal/holo.
+    // Only use the physical variant when the card is otherwise just normal/holo.
+    const variant = (baseVariant !== 'normal' && baseVariant !== 'holo')
+      ? baseVariant
+      : physicalVariant;
+
+    return {
+      id: `${tcgCard.id}-${priceType}`,
+      name: tcgCard.name,
+      pokemonName: resolvedName,
+      setName: tcgCard.set.name,
+      setCode: tcgCard.set.id,
+      setNumber: `${tcgCard.number}/${tcgCard.set.printedTotal || tcgCard.set.total}`,
+      releaseDate: tcgCard.set.releaseDate,
+      variant,
+      artVariant: priceTypeLabel(priceType),
+      rarity: tcgCard.rarity || 'Common',
+      isHolo: priceType !== 'normal' && priceType !== '1stEditionNormal',
+      imageUrl: tcgCard.images.small,
+      largeImageUrl: tcgCard.images.large,
+      marketPrice: priceData?.market ?? priceData?.mid,
+      prices: { low: priceData?.low, mid: priceData?.mid, market: priceData?.market, high: priceData?.high },
+      tcgPlayerUrl: tcgCard.tcgplayer?.url,
+    };
+  });
 }
 
 export function mapTCGSetToSet(tcgSet: TCGSet): PokemonSet {
@@ -189,7 +240,8 @@ export async function fetchCardsForSet(setId: string): Promise<PokemonCard[]> {
   const tcgCards = await fetchAllPages(
     `${API_BASE_URL}/cards?q=set.id:${setId}&orderBy=number`
   );
-  const cards = await Promise.all(tcgCards.map(c => mapTCGCardToCard(c)));
+  const cardArrays = await Promise.all(tcgCards.map(c => mapTCGCardToCards(c)));
+  const cards = cardArrays.flat();
 
   await cacheSet(cacheKey, cards, CACHE_TTL.TCG_CARDS);
   return cards;
@@ -220,7 +272,8 @@ export async function fetchCardsForPokemon(pokemonName: string, includeCameos: b
     const tcgCards = await fetchAllPages(
       `${API_BASE_URL}/cards?q=nationalPokedexNumbers:${dexNum}&orderBy=set.releaseDate`
     );
-    cards = await Promise.all(tcgCards.map(c => mapTCGCardToCard(c, displayName)));
+    const cardArrays = await Promise.all(tcgCards.map(c => mapTCGCardToCards(c, displayName)));
+    cards = cardArrays.flat();
     await cacheSet(cacheKey, cards, CACHE_TTL.TCG_CARDS);
   }
 
@@ -247,9 +300,11 @@ async function fetchCameoCards(cameoEntries: CameoEntry[]): Promise<PokemonCard[
         const response = await scheduledFetch(url);
         const data = await response.json();
         if (data.data?.length > 0) {
-          const card = await mapTCGCardToCard(data.data[0]);
-          card.variant = 'cameo';
-          cameoCards.push(card);
+          const cards = await mapTCGCardToCards(data.data[0]);
+          if (cards.length > 0) {
+            cards[0].variant = 'cameo';
+            cameoCards.push(cards[0]);
+          }
         }
         continue;
       }
@@ -257,9 +312,11 @@ async function fetchCameoCards(cameoEntries: CameoEntry[]): Promise<PokemonCard[
       const response = await scheduledFetch(`${API_BASE_URL}/cards/${entry.cardId}`);
       const data = await response.json();
       if (!data.data?.set) continue;
-      const card = await mapTCGCardToCard(data.data);
-      card.variant = 'cameo';
-      cameoCards.push(card);
+      const cards = await mapTCGCardToCards(data.data);
+      if (cards.length > 0) {
+        cards[0].variant = 'cameo';
+        cameoCards.push(cards[0]);
+      }
     } catch (error) {
       console.warn(`Failed to fetch cameo card "${entry.cardName}":`, error);
     }
