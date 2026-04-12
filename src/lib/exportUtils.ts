@@ -270,12 +270,12 @@ export function exportChecklistToCSV(
     csvEscape(card.name),
     csvEscape(card.pokemonName),
     csvEscape(card.setName),
-    card.setNumber,
-    card.variant,
-    card.rarity,
+    csvEscape(card.setNumber),
+    csvEscape(card.variant),
+    csvEscape(card.rarity),
     checkedSet.has(card.id) ? 'yes' : 'no',
     card.marketPrice != null ? card.marketPrice.toFixed(2) : '',
-    card.tcgPlayerUrl || '',
+    csvEscape(card.tcgPlayerUrl || ''),
   ].join(','));
 
   const csv = [header.join(','), ...rows].join('\n');
