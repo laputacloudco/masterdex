@@ -1,6 +1,6 @@
 export type CardVariant = 'normal' | 'reverse-holo' | 'holo' | 'full-art' | 'secret-rare' | 'rainbow-rare' | 'gold' | 'promo' | 'collab' | 'tournament' | 'cameo';
 
-export type SortOrder = 'set-order' | 'chronological' | 'grouped-by-set' | 'evolution-chain';
+export type SortOrder = 'set-order' | 'chronological' | 'grouped-by-set' | 'grouped-by-pokemon' | 'evolution-chain';
 
 export type MasterSetType = 'official-set' | 'pokemon-collection';
 
@@ -18,6 +18,8 @@ export interface VariantFilters {
   cameo: boolean;
 }
 
+export type CardCondition = 'near-mint' | 'lightly-played' | 'moderately-played';
+
 export interface PokemonCard {
   id: string;
   name: string;
@@ -33,6 +35,12 @@ export interface PokemonCard {
   imageUrl?: string;
   largeImageUrl?: string;
   marketPrice?: number;
+  prices?: {
+    low?: number;
+    mid?: number;
+    market?: number;
+    high?: number;
+  };
   tcgPlayerUrl?: string;
 }
 

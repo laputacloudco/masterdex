@@ -1,146 +1,95 @@
-# Planning Guide
+# Pokomplete Product Plan
 
-**MasterDex** - A comprehensive Pokemon Trading Card Master Set planner that helps collectors organize and track complete sets, including official set releases, Pokemon-specific collections, and evolution chains with all card variants.
+## Positioning
 
-**Experience Qualities**:
-1. **Organized** - Clear categorization and flexible sorting options make it easy to plan complex collections across hundreds of card variants
-2. **Comprehensive** - Every variant matters; the app accounts for reverse holos, special patterns, promos, and collaboration releases
-3. **Practical** - Generates binder-ready checklists with print-friendly formatting and sensible ordering systems
+**The Pokemon-first collection planner.** While competitors optimize for set-based tracking (complete your Base Set), Pokomplete answers the collector s real question: What cards exist of my favorite Pokemon? Including trainer-owned variants, cameos, promos, and collabs. Our variant filter system lets you define what counts as YOUR master set.
 
-**Complexity Level**: Complex Application (advanced functionality, likely with multiple views)
-This app requires managing large datasets of Pokemon cards with multiple attributes, complex filtering logic, multiple view states (set builder, pokemon selector, output preview), and sophisticated sorting algorithms for different collection strategies.
+## Competitive Landscape
 
-## Essential Features
+| Tool | Model | Strengths | Weaknesses |
+|------|-------|-----------|------------|
+| Cardrake | Freemium | Best visual binder layouts, set guides | Set-focused only, premium for save/sync |
+| MasterSet.gg | ~5 USD/mo | Gamification, live pricing, custom master sets | Subscription for export/analytics |
+| TCG MasterSet | Freemium (200 cards) | Multi-TCG, digital binder, rarity breakdown | Card cap on free tier |
+| PkmnBindr | Free | Drag-drop binder pages, printable PDFs | No master set planning |
+| Takara | Freemium | AI card scanning, offline | Mobile-focused |
+| 9Pocket | Paid iOS | Scanning, value tracking | iOS only |
 
-### Master Set Type Selection
-- **Functionality**: Choose between Official Set, Pokemon Collection, or Evolution Chain collection types
-- **Purpose**: Different collection strategies require different card selection and ordering logic
-- **Trigger**: Primary selection on the main builder screen
-- **Progression**: Select type → Configure options → Choose cards → Generate list
-- **Success criteria**: Type changes dynamically update available options and preview structure
+## Our Differentiators
 
-### Card Variant Filter
-- **Functionality**: Toggle between "All Variants" (holos, reverse holos, patterns) and "Unique Art Only"
-- **Purpose**: Some collectors want every printing variant, others only care about unique artwork
-- **Trigger**: Toggle switch in the builder configuration
-- **Progression**: Toggle switch → Card list updates → Duplicate art variants hidden/shown
-- **Success criteria**: Card count accurately reflects variant inclusion preference
+1. Pokemon-centric master sets - every Ampharos card ever printed across all sets
+2. Evolution chain awareness - inline chain selection, chain-ordered sorting, grouped-by-pokemon mode
+3. Cameo database - 345 documented appearances from community spreadsheet
+4. Fine-grained variant control - 11 toggleable variant categories (you define your master set)
+5. 5 sort modes including grouped-by-pokemon (unique)
+6. 100% free, open source, no account - zero friction, offline-capable
 
-### Pokemon/Set Selector
-- **Functionality**: Search and select Pokemon names or official Set names with autocomplete
-- **Purpose**: Define the scope of the master set collection
-- **Trigger**: Type-ahead search field
-- **Progression**: Type search term → See suggestions → Select option → Added to collection scope
-- **Success criteria**: Can add multiple Pokemon or select a single Set; clear visual of selections
+## Roadmap
 
-### Sort Order Configuration
-- **Functionality**: Choose ordering: Set Order (for official sets), Chronological, Grouped by Set, or Evolution Chain Order
-- **Purpose**: Different binder organization strategies suit different collection types
-- **Trigger**: Dropdown or radio selection
-- **Progression**: Select sort method → Preview updates with new ordering
-- **Success criteria**: Cards reorder instantly; evolution chains group correctly
+### Phase 1: Foundation (table-stakes parity)
+- Visual binder grid preview (9-pocket layout) - #13
+- Card image gallery / thumbnail grid view - #14
+- CSV export - #15
+- Shareable URL for setlist configuration - #16
+- Mobile responsive polish - #17
+- Binder page count calculator - #18
 
-### Binder-Ready Checklist Output
-- **Functionality**: Generate formatted checklist with card names, set info, variant details, and checkboxes; export to PDF or print; generate placeholder cards for unchecked items
-- **Purpose**: Provides a printable/viewable reference for tracking collection progress and physical placeholders for binders
-- **Trigger**: View/Generate button, Export dropdown menu
-- **Progression**: Configure collection → View checklist → Export as PDF/Print → Generate placeholder cards for missing items
-- **Success criteria**: Clean formatting, all variants listed, proper ordering applied; PDF exports successfully; placeholder cards show correct information in binder-ready format
+### Phase 2: Differentiation
+- What do I still need buy list with TCGPlayer links + cost estimate
+- Multi-Pokemon comparison (side-by-side card histories)
+- Evolution chain visualization tree
+- Printable binder pages (9-pocket format with card images)
+- Cameo contribution workflow
 
-### Collection Save/Load
-- **Functionality**: Persist master set configurations for later reference
-- **Purpose**: Collectors work on sets over months/years and need to save progress
-- **Trigger**: Save button stores current configuration
-- **Progression**: Configure set → Save with name → Load from saved list → Continue tracking
-- **Success criteria**: All settings and selections persist and restore accurately
+### Phase 3: Growth
+- Artist master sets (every card by Mitsuhiro Arita)
+- Type-themed collections (every Dragon-type card)
+- Japanese set support
+- Shareable collection profiles (public URLs)
+- Price history charts
+- Community leaderboard (opt-in)
 
-## Edge Case Handling
+## Monetization
 
-- **No Results Found**: Display helpful message suggesting alternative search terms or browse by set
-- **Empty Configuration**: Prompt user to select at least one Pokemon or Set before generating
-- **Large Sets**: Show card count warnings for sets with 500+ variants; paginate if needed
-- **Missing Data**: Gracefully handle cards without complete variant information
-- **Evolution Chains**: Handle Pokemon with split evolutions (Eevee) or regional variants intelligently
+### Model: Freemium (generous free tier + Pro for power features)
 
-## Design Direction
+The core planning experience stays free and open source — that's the growth engine. Premium features target power users who get enough value to pay.
 
-The design should evoke the excitement and nostalgia of collecting Pokemon cards while maintaining professional organization tools. Think vibrant Pokemon-inspired colors, playful typography that nods to the TCG aesthetic, and smooth interactions that feel rewarding. The interface should feel like a premium deck-building tool mixed with the joy of opening a booster pack.
+**Free (always):**
+- Pokemon/set search, variant filters, sort modes, evolution chains
+- Checklist with progress tracking
+- Cameo database browsing
+- Basic text checklist PDF export
+- Saved setlists (localStorage)
+- Offline support
 
-## Color Selection
+**Pro (~$3-5/month or ~$30/year):**
+- **Proxy placeholder sheets** — printable 9-pocket pages with grayscale card images positioned for binder sleeves. Free tier gets text-only placeholders.
+- **Visual binder preview** — interactive 9-pocket grid view showing your collection as it would appear in a physical binder.
+- **"What do I still need" buy list** — filtered list of uncollected cards with TCGPlayer links and total cost estimate by condition.
+- **CSV/data export** — export full checklist with prices, ownership, metadata.
+- **Collection value analytics** — total value, value by variant type, value breakdown by set, remaining spend estimate.
+- **Multiple saved collections** — free tier allows 3 saved setlists, Pro unlimited.
+- **Priority cameo submissions** — contributed cameos reviewed and merged faster.
 
-**Primary Color**: Electric yellow (oklch(0.85 0.15 95)) - Captures Pikachu's iconic color and represents energy, excitement, and the Pokemon brand
-**Secondary Colors**: 
-- Deep blue (oklch(0.45 0.12 250)) - Professional, trustworthy, represents water-type cards and adds stability
-- Vibrant red (oklch(0.60 0.20 25)) - Represents fire-type energy and important actions/highlights
-**Accent Color**: Holographic purple (oklch(0.65 0.18 290)) - Evokes the shimmer of rare holographic cards, used for CTAs and special indicators
-**Foreground/Background Pairings**:
-- Background (White oklch(0.98 0 0)): Dark text (oklch(0.20 0.02 270)) - Ratio 12.8:1 ✓
-- Primary (Electric Yellow oklch(0.85 0.15 95)): Dark overlay text (oklch(0.15 0.02 95)) - Ratio 10.2:1 ✓
-- Accent (Holographic Purple oklch(0.65 0.18 290)): White text (oklch(0.98 0 0)) - Ratio 5.1:1 ✓
-- Deep Blue (oklch(0.45 0.12 250)): White text (oklch(0.98 0 0)) - Ratio 7.8:1 ✓
+### Revenue alternatives to explore
+- **Affiliate links** — TCGPlayer affiliate program pays ~5% on purchases made through referral links. Every card in the checklist already links to TCGPlayer. This is passive and doesn't gate features.
+- **Sponsored content** — partner with binder/sleeve manufacturers (Vault X, Ultra Pro) to recommend products alongside the binder page calculator. "You need a 360-pocket binder — here's our pick."
+- **One-time purchases** — sell individual printable binder page sets per expansion ($1-2 per set, similar to PokeBinder's model).
+- **Donations/tips** — Ko-fi or GitHub Sponsors for users who want to support development without a subscription.
 
-## Font Selection
+### Implementation notes
+- Payment: Stripe Checkout or Lemon Squeezy (no backend needed — verify subscription via JWT token stored client-side after checkout)
+- Gating: check subscription status before allowing Pro exports/views. Core search/checklist never gated.
+- Open source compatibility: Pro features can live in the same repo but gate on a license key. The code is open but the service has value-add.
 
-Typefaces should balance playful Pokemon energy with the clarity needed for detailed checklists and card information.
+## Architecture
 
-- **Typographic Hierarchy**: 
-  - H1 (Page Title): Lilita One Bold/36px/tight letter spacing - Playful, bold header reminiscent of Pokemon logos
-  - H2 (Section Headers): Space Grotesk Bold/24px/normal spacing - Modern, technical feel for organization
-  - H3 (Card Set Names): Space Grotesk SemiBold/18px/normal spacing
-  - Body (Descriptions/Lists): Inter Regular/16px/relaxed line height (1.6) - Clean, readable for checklists
-  - Small (Card Details): Inter Regular/14px/normal - Detailed variant information
+See .github/copilot-instructions.md for technical architecture, conventions, and build commands.
 
-## Animations
+## Data Sources
 
-Animations should create moments of delight that evoke the Pokemon experience: card flips, sparkles for rare variants, and smooth transitions between views. Use subtle shimmer effects on hover for cards with holo variants. List reordering should animate smoothly to help users track changes. Keep micro-interactions quick (100-200ms) while allowing collection generation to feel momentous with a satisfying 400ms reveal animation.
-
-## Component Selection
-
-**Components**:
-- **Tabs**: Switch between "Build Set", "My Collections", and "Preview" views
-- **Select/Combobox**: Pokemon and Set selection with search/autocomplete
-- **Radio Group**: Master set type selection (Official Set/Pokemon/Evolution Chain)
-- **Switch**: Toggle between "All Variants" and "Unique Art Only"
-- **Card**: Display each master set configuration and saved collections
-- **Badge**: Show card counts, variant types, and set identifiers
-- **Checkbox**: Checklist items in the binder-ready output
-- **Button**: Primary actions (Generate, Save, Print) with distinct hierarchy
-- **Dialog**: Detailed card information and save/load modals
-- **Scroll Area**: Handle long card lists smoothly
-
-**Customizations**:
-- Custom card preview component with shimmer effect for holo cards
-- Custom multi-select component for Pokemon with evolution chain visualization
-- Gradient background overlay suggesting booster pack foil pattern
-
-**States**:
-- Buttons: Bright accent color (purple) for primary, outlined for secondary, ghost for tertiary
-- Inputs: Focus state with electric yellow ring glow
-- Cards: Subtle shadow, gentle hover lift with 200ms transition
-- Checkboxes: Custom checkmark with Pokemon ball icon
-
-**Icon Selection**:
-- Plus/Minus: Add/remove Pokemon or sets
-- Funnel: Filter variants
-- SortAscending/SortDescending: Sort order controls
-- Printer: Print checklist
-- FilePdf: Export PDF documents
-- Cards: Placeholder card generation
-- FloppyDisk: Save collection
-- Lightning: Quick actions
-- CaretDown: Dropdown menus
-
-**Spacing**:
-- Page padding: p-6 to p-8
-- Section gaps: gap-6
-- Card internal padding: p-6
-- List item spacing: gap-3
-- Button groups: gap-2
-
-**Mobile**:
-- Stack tabs vertically on mobile
-- Single column layout for collection cards
-- Collapsible sections for filter controls
-- Bottom-sheet style dialogs on mobile
-- Touch-friendly 44px minimum hit areas
-- Sticky header with collection name and card count
+- Card data: Pokemon TCG API (https://pokemontcg.io/) - live, cached via IndexedDB + service worker
+- Species/evolution: PokeAPI (https://pokeapi.co/) - cached 30 days
+- Cameo data: data/cameos.csv - community-sourced, imported via npm run import-cameos
+- Pricing: TCGPlayer via Pokemon TCG API price fields
