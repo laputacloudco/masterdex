@@ -595,22 +595,21 @@ export function SetBuilder({
                   {cardCount} cards loaded — view checklist →
                 </Badge>
               </div>
-              {missingVariantData && (
-                <p className="text-xs text-muted-foreground text-center mt-3">
-                  ⚠ Variant data (reverse holo, etc.) is not yet available for this set from TCGPlayer.
-                  Only one entry per card number is shown. Variants will appear as pricing data becomes available.
-                </p>
-              )}
+              {missingVariantData && <MissingVariantWarning className="mt-3" />}
             </CardContent>
           </Card>
-          {missingVariantData && (
-            <p className="sm:hidden text-xs text-muted-foreground text-center">
-              ⚠ Variant data (reverse holo, etc.) is not yet available for this set from TCGPlayer.
-              Only one entry per card number is shown. Variants will appear as pricing data becomes available.
-            </p>
-          )}
+          {missingVariantData && <MissingVariantWarning className="sm:hidden" />}
         </>
       )}
     </div>
+  );
+}
+
+function MissingVariantWarning({ className }: { className?: string }) {
+  return (
+    <p className={`text-xs text-muted-foreground text-center${className ? ` ${className}` : ''}`}>
+      ⚠ Variant data (reverse holo, etc.) is not yet available for this set from TCGPlayer.
+      Only one entry per card number is shown. Variants will appear as pricing data becomes available.
+    </p>
   );
 }
